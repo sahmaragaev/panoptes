@@ -1,0 +1,27 @@
+auths:
+  public_v2:
+    community: public
+    version: 2
+
+modules:
+  if_mib:
+    walk:
+      - sysDescr
+      - sysUpTime
+      - sysName
+      - ifTable
+      - ifXTable
+    lookups:
+      - source_indexes: [ifIndex]
+        lookup: ifAlias
+      - source_indexes: [ifIndex]
+        lookup: ifDescr
+      - source_indexes: [ifIndex]
+        lookup: ifName
+    overrides:
+      ifAlias:
+        type: DisplayString
+      ifDescr:
+        type: DisplayString
+      ifName:
+        type: DisplayString
