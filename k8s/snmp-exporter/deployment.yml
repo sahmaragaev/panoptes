@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snmp-exporter
+  namespace: panoptes
+  labels:
+    app.kubernetes.io/name: snmp-exporter
+    app.kubernetes.io/part-of: panoptes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: snmp-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: snmp-exporter
+    spec:
+      containers:
+        - name: snmp-exporter
+          image: prom/snmp-exporter:v0.28.0
+          ports:
+            - containerPort: 9116
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9116
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9116
+            initialDelaySeconds: 5
