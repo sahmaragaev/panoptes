@@ -1,0 +1,25 @@
+---
+- name: Disk Cleanup
+  hosts: "{{ target_host | default('localhost') }}"
+  become: yes
+  tasks:
+    - name: Docker system prune
+      ansible.builtin.command: docker system prune -af
+      ignore_errors: yes
+
+    - name: Truncate large log files
+      ansible.builtin.shell: find /var/log -name "*.log" -size +100M -exec truncate -s 0 {} +
+      ignore_errors: yes
+
+    - name: Clean journal logs
+      ansible.builtin.command: journalctl --vacuum-size=200M
+      ignore_errors: yes
+
+    - name: Apt autoclean
+      ansible.builtin.apt:
+        autoclean: yes
+      ignore_errors: yes
+
+    - name: Remove dangling Docker images
+      ansible.builtin.command: docker image prune -f
+      ignore_errors: yes
