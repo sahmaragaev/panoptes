@@ -1,0 +1,16 @@
+---
+- name: Rotate Logs
+  hosts: "{{ target_host | default('localhost') }}"
+  become: yes
+  tasks:
+    - name: Force logrotate
+      ansible.builtin.command: logrotate -f /etc/logrotate.conf
+      ignore_errors: yes
+
+    - name: Compress old uncompressed logs
+      ansible.builtin.shell: find /var/log -name "*.log.*" ! -name "*.gz" -exec gzip {} +
+      ignore_errors: yes
+
+    - name: Remove compressed logs older than 7 days
+      ansible.builtin.shell: find /var/log -name "*.gz" -mtime +7 -delete
+      ignore_errors: yes

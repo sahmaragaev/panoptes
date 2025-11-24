@@ -1,0 +1,6 @@
+tenants:
+  - name: owner
+    key: pnpt_owner_000000000000
+    default: true
+    telegram_chat_ids:
+      - "-100YOUR_CHAT_ID"
