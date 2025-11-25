@@ -1,0 +1,29 @@
+---
+- name: Clear Memory
+  hosts: "{{ target_host | default('localhost') }}"
+  become: yes
+  tasks:
+    - name: Sync filesystems
+      ansible.builtin.command: sync
+
+    - name: Drop page cache
+      ansible.builtin.shell: echo 3 > /proc/sys/vm/drop_caches
+
+    - name: Check memory usage
+      ansible.builtin.shell: free | awk '/Mem/ {printf "%.0f", $3/$2 * 100}'
+      register: memory_usage
+
+    - name: Show memory usage
+      ansible.builtin.debug:
+        var: memory_usage.stdout
+
+    - name: Restart memory-heavy services if usage above 90 percent
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - apache2
+        - mysql
+        - redis-server
+      when: memory_usage.stdout | int > 90
+      ignore_errors: yes
