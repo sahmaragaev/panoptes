@@ -1,0 +1,12 @@
+.env
+*_data/
+*.pyc
+__pycache__/
+.venv/
+node_modules/
+*.log
+CLAUDE.md
+DEPLOY.md
+configs/nginx/api-keys.yml
+exporters/custom-exporter/config.yaml
+docker-compose.override.yml
