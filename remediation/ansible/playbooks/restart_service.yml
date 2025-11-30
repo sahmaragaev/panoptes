@@ -1,0 +1,23 @@
+---
+- name: Restart Service
+  hosts: "{{ target_host | default('localhost') }}"
+  become: yes
+  vars:
+    service_name: "unknown"
+  tasks:
+    - name: Restart the service
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+      register: restart_result
+
+    - name: Wait for service to become active
+      ansible.builtin.command: systemctl is-active {{ service_name }}
+      register: service_status
+      retries: 5
+      delay: 5
+      until: service_status.rc == 0
+
+    - name: Show service status
+      ansible.builtin.debug:
+        var: service_status.stdout

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-gateway
+  namespace: panoptes
+  labels:
+    app.kubernetes.io/name: nginx-gateway
+    app.kubernetes.io/part-of: panoptes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-gateway
+    spec:
+      containers:
+        - name: nginx-gateway
+          image: openresty/openresty:1.27.1.2-alpine
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /usr/local/openresty/nginx/conf/nginx.conf
+              subPath: nginx.conf
+            - name: nginx-config
+              mountPath: /etc/nginx/api-keys.yml
+              subPath: api-keys.yml
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-gateway-config
