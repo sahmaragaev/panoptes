@@ -73,7 +73,7 @@ UMAS uses two severity levels that determine notification routing and urgency.
 ### Warning
 
 - **Color**: Yellow/Orange
-- **Notification channel**: Slack (`#umas-alerts`)
+- **Notification channel**: Telegram
 - **Repeat interval**: Every 4 hours
 - **Meaning**: A condition that requires attention but is not immediately service-impacting. The operations team should investigate during business hours.
 - **Examples**: High CPU usage, disk space above 80%, memory pressure, network errors
@@ -81,7 +81,7 @@ UMAS uses two severity levels that determine notification routing and urgency.
 ### Critical
 
 - **Color**: Red
-- **Notification channel**: Slack (`#umas-critical`) **AND** Telegram
+- **Notification channel**: Telegram
 - **Repeat interval**: Every 1 hour
 - **Meaning**: A condition that is actively impacting service availability or will do so imminently. Requires immediate response.
 - **Examples**: Instance unreachable, disk above 90%, OOM kills, monitoring stack failures
@@ -95,12 +95,12 @@ Alert routing is defined in `configs/alertmanager/alertmanager.yml`. The routing
 ```
 All alerts
     |
-    |--> Default receiver: slack-warnings
+    |--> Default receiver: telegram-warnings
     |    (group_wait: 30s, group_interval: 5m, repeat_interval: 4h)
     |
-    |--> Match: severity=critical --> critical-multi receiver
+    |--> Match: severity=critical --> telegram-critical receiver
     |    (repeat_interval: 1h)
-    |    Sends to: Slack #umas-critical + Telegram
+    |    Sends to: Telegram
     |
     |--> Match: remediation=.+ --> webhook-remediation receiver
          (group_wait: 10s, continue: true)
@@ -120,8 +120,8 @@ Alerts are grouped by three labels: `alertname`, `severity`, and `instance`. Thi
 
 | Receiver | Channel | Configuration |
 |---|---|---|
-| `slack-warnings` | Slack `#umas-alerts` | Warning-level alerts, resolved notifications enabled |
-| `critical-multi` | Slack `#umas-critical` + Telegram | Critical-level alerts, resolved notifications enabled |
+| `telegram-warnings` | Telegram | Warning-level alerts, resolved notifications enabled |
+| `telegram-critical` | Telegram | Critical-level alerts, resolved notifications enabled |
 | `webhook-remediation` | HTTP POST to webhook-receiver:5001 | Alerts with `remediation` label, resolved notifications disabled |
 
 ---

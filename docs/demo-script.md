@@ -54,7 +54,7 @@ Complete these steps **at least 30 minutes before** the demo begins.
 5. Grafana - UMAS Custom Metrics dashboard
 6. Prometheus Targets page (http://localhost:9090/targets)
 7. Alertmanager UI (http://localhost:9093)
-8. Slack channel `#umas-alerts` (or Telegram group) -- visible on screen or second monitor
+8. Telegram group -- visible on screen or second monitor
 
 ### Terminal Windows
 
@@ -64,9 +64,8 @@ Complete these steps **at least 30 minutes before** the demo begins.
 
 ### Notification Channels
 
-- [ ] Slack webhook is configured and tested: Send a test message
-- [ ] Telegram bot is configured and tested (if using Telegram for critical alerts)
-- [ ] Keep Slack/Telegram visible during the demo to show notifications arriving in real time
+- [ ] Telegram bot is configured and tested: Send a test message
+- [ ] Keep Telegram visible during the demo to show notifications arriving in real time
 
 ---
 
@@ -84,7 +83,7 @@ Show the architecture diagram (from `docs/architecture.md` or a prepared slide) 
 
 2. **Storage Layer**: "Prometheus stores time-series metrics with a 15-second scrape interval and 15-day retention. Loki stores logs with label-based indexing, which is far more efficient than full-text indexing. Zabbix with PostgreSQL handles Windows and Active Directory monitoring."
 
-3. **Alerting Layer**: "Prometheus evaluates 26 alert rules every 15 seconds. When an alert fires, Alertmanager routes it based on severity -- warnings go to Slack, critical alerts go to both Slack and Telegram. Alerts with a remediation label are also sent to our webhook receiver."
+3. **Alerting Layer**: "Prometheus evaluates 26 alert rules every 15 seconds. When an alert fires, Alertmanager routes it based on severity -- warnings and critical alerts go to Telegram. Alerts with a remediation label are also sent to our webhook receiver."
 
 4. **Remediation Layer**: "The webhook receiver triggers Ansible playbooks to automatically fix known issues -- disk cleanup, memory clearing, service restarts -- without human intervention."
 
@@ -185,7 +184,7 @@ pkill stress-ng
 
 **Duration**: 3-4 minutes
 
-**Action**: Show the alert flowing from Prometheus to Alertmanager to Slack/Telegram.
+**Action**: Show the alert flowing from Prometheus to Alertmanager to Telegram.
 
 #### What to Show
 
@@ -199,7 +198,7 @@ pkill stress-ng
    - Show the grouping (by alertname, severity, instance)
    - Show the "Silence" button and explain when you would use it
 
-3. **Slack channel** (or Telegram):
+3. **Telegram**:
    - Show the notification that arrived
    - Point out the alert name, summary, description, and current value
    - Show the resolved notification after killing stress-ng
@@ -231,13 +230,13 @@ bash remediation/scripts/simulate_service_down.sh node-exporter
 1. **Prometheus Targets page**: Refresh and show node-exporter target turning red (DOWN)
 2. **Prometheus Alerts page**: Show InstanceDown going to PENDING, then FIRING (after 1 minute)
 3. **Grafana Infrastructure Overview**: Show the gap in metrics for the downed host
-4. **Slack/Telegram**: Show the critical alert notification
+4. **Telegram**: Show the critical alert notification
 
 #### Talking Points
 
 > "I have stopped the Node Exporter container, simulating a host or exporter failure. Within 15 seconds, Prometheus detects the scrape failure."
 
-> "After 1 minute, the InstanceDown alert fires. This is a critical alert, so it goes to both Slack and Telegram, reaching the team through multiple channels."
+> "After 1 minute, the InstanceDown alert fires. This is a critical alert, so it goes to Telegram, reaching the team immediately."
 
 > "Notice in Grafana -- the metrics for this host now show a gap. This is the visual indicator that data collection has stopped."
 
@@ -455,7 +454,7 @@ docker compose down -v && docker compose up -d
 - Verify the data source is connected: Connections > Data Sources > Test
 - If still empty, demonstrate Prometheus directly: http://localhost:9090/graph and run `up` query
 
-### If Slack/Telegram Notifications Do Not Arrive
+### If Telegram Notifications Do Not Arrive
 
 - Show the Alertmanager UI instead (http://localhost:9093) -- alerts are visible there even if notifications fail
 - Check Alertmanager logs for errors: `docker compose logs alertmanager | tail -20`
@@ -478,7 +477,7 @@ docker compose down -v && docker compose up -d
 
 - All dashboards are pre-provisioned locally -- they do not require internet access
 - Prometheus, Grafana, and Loki all run locally
-- Only Slack/Telegram notifications require internet -- fall back to showing Alertmanager UI
+- Only Telegram notifications require internet -- fall back to showing Alertmanager UI
 
 ---
 

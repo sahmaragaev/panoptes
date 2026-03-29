@@ -1201,7 +1201,7 @@ If Prometheus memory continues to grow despite optimization, consider a capacity
 
 #### What
 
-Alertmanager is failing to deliver notifications through one or more channels (Slack, Telegram, Email, or Webhook).
+Alertmanager is failing to deliver notifications through one or more channels (Telegram, Email, or Webhook).
 
 #### Impact
 
@@ -1221,27 +1221,19 @@ Alertmanager is failing to deliver notifications through one or more channels (S
    curl -s http://localhost:9093/api/v2/alerts | python3 -m json.tool
    ```
 
-3. **Test Slack webhook:**
-   ```bash
-   curl -X POST -H 'Content-type: application/json' \
-     --data '{"text":"UMAS test notification"}' \
-     $SLACK_WEBHOOK_URL
-   ```
-
-4. **Test Telegram bot:**
+3. **Test Telegram bot:**
    ```bash
    curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
      -d "chat_id=${TELEGRAM_CHAT_ID}&text=UMAS test notification"
    ```
 
-5. **Test webhook receiver:**
+4. **Test webhook receiver:**
    ```bash
    curl http://localhost:5001/health
    ```
 
 #### Resolution
 
-- If Slack webhook URL is invalid: Update `.env` with a valid URL and restart Alertmanager
 - If Telegram bot token is invalid: Create a new bot via @BotFather and update `.env`
 - If the webhook receiver is down: Restart it with `docker compose restart webhook-receiver`
 - If network connectivity is the issue: Check firewall rules for outbound HTTPS

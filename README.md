@@ -52,7 +52,6 @@ flowchart TB
 
     subgraph Visualization["Visualization & Notification"]
         GR["Grafana\n:3000"]
-        SL["Slack"]
         TG["Telegram"]
         EM["Email / SMTP"]
     end
@@ -83,7 +82,6 @@ flowchart TB
     LK --> GR
     ZW --> GR
 
-    AM --> SL
     AM --> TG
     AM --> EM
     AM --> WH
@@ -116,7 +114,7 @@ Grafana will be available at [http://localhost:3000](http://localhost:3000) (def
 
 - **Real-time infrastructure monitoring** -- CPU, memory, disk, network, and system load tracked at 15-second intervals via Prometheus and Node Exporter
 - **Log aggregation and analysis** -- Centralized log collection with Loki and Promtail, covering system logs, auth logs, Docker container logs, and systemd journals
-- **Intelligent alerting with multi-channel notifications** -- 26 alert rules with routing to Slack, Telegram, and Email based on severity
+- **Intelligent alerting with multi-channel notifications** -- 26 alert rules with routing to Telegram and Email based on severity
 - **Automated self-healing remediation** -- Webhook receiver triggers Ansible playbooks to clean disks, clear memory, restart failed services, and more
 - **Windows Server / Active Directory monitoring** -- Custom exporter with LDAP health checks for domain controllers and AD replication status
 - **Custom metrics collection** -- Python-based exporter for HTTP health checks, TLS certificate expiry, SSH intrusion attempts, and AD health
@@ -255,8 +253,7 @@ cp .env.example .env
 |---|---|
 | `GRAFANA_ADMIN_USER` | Grafana admin username |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana admin password |
-| `SLACK_WEBHOOK_URL` | Slack incoming webhook for alert notifications |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token for critical alerts |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token for alert notifications |
 | `TELEGRAM_CHAT_ID` | Telegram chat/group ID for notifications |
 | `SMTP_HOST` / `SMTP_PORT` | SMTP server for email alerts |
 | `SMTP_USER` / `SMTP_PASSWORD` | SMTP authentication credentials |

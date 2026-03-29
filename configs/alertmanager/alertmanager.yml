@@ -1,6 +1,5 @@
 global:
   resolve_timeout: 5m
-  slack_api_url: '${SLACK_WEBHOOK_URL}'
   smtp_smarthost: '${SMTP_HOST}:${SMTP_PORT}'
   smtp_from: '${SMTP_USER}'
   smtp_auth_username: '${SMTP_USER}'
@@ -10,7 +9,7 @@ templates:
   - '/etc/alertmanager/templates/*.tmpl'
 
 route:
-  receiver: 'slack-warnings'
+  receiver: 'telegram-warnings'
   group_by: ['alertname', 'severity', 'instance']
   group_wait: 30s
   group_interval: 5m
@@ -18,7 +17,7 @@ route:
   routes:
     - match:
         severity: critical
-      receiver: 'critical-multi'
+      receiver: 'telegram-critical'
       repeat_interval: 1h
     - match_re:
         remediation: '.+'
@@ -27,23 +26,22 @@ route:
       continue: true
 
 receivers:
-  - name: 'slack-warnings'
-    slack_configs:
-      - channel: '#umas-alerts'
-        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
-        text: '{{ range .Alerts }}*{{ .Annotations.summary }}*\n{{ .Annotations.description }}\n{{ end }}'
-        send_resolved: true
-
-  - name: 'critical-multi'
-    slack_configs:
-      - channel: '#umas-critical'
-        title: '[CRITICAL] {{ .CommonLabels.alertname }}'
-        text: '{{ range .Alerts }}*{{ .Annotations.summary }}*\n{{ .Annotations.description }}\n{{ end }}'
-        send_resolved: true
+  - name: 'telegram-warnings'
     telegram_configs:
       - bot_token: '${TELEGRAM_BOT_TOKEN}'
         chat_id: ${TELEGRAM_CHAT_ID}
-        message: '{{ range .Alerts }}[{{ .Status | toUpper }}] {{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}'
+        message: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ range .Alerts }}
+{{ .Annotations.summary }}
+{{ .Annotations.description }}{{ end }}'
+        send_resolved: true
+
+  - name: 'telegram-critical'
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN}'
+        chat_id: ${TELEGRAM_CHAT_ID}
+        message: '[CRITICAL] {{ .CommonLabels.alertname }}{{ range .Alerts }}
+{{ .Annotations.summary }}
+{{ .Annotations.description }}{{ end }}'
         send_resolved: true
 
   - name: 'webhook-remediation'

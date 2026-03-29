@@ -68,7 +68,6 @@ flowchart TB
     end
 
     subgraph Notify["Notification Channels"]
-        SL["Slack\n#umas-alerts\n#umas-critical"]
         TG["Telegram\nBot API"]
         EM["Email\nSMTP"]
     end
@@ -93,8 +92,7 @@ flowchart TB
     ZS --> ZW
     ZW -->|"Zabbix plugin"| GR
 
-    AM -->|"warning"| SL
-    AM -->|"critical"| SL
+    AM -->|"warning"| TG
     AM -->|"critical"| TG
     AM -->|"remediation label"| WH
     AM -.->|"email (optional)"| EM
@@ -153,7 +151,7 @@ flowchart TB
 
 - **Image**: `prom/alertmanager:v0.28.1`
 - **Port**: 9093
-- **Purpose**: Receives alerts from Prometheus, deduplicates them, groups by alertname/severity/instance, and routes to appropriate notification channels. Warning alerts go to Slack; critical alerts go to both Slack and Telegram; alerts with a `remediation` label are additionally forwarded to the webhook receiver.
+- **Purpose**: Receives alerts from Prometheus, deduplicates them, groups by alertname/severity/instance, and routes to appropriate notification channels. Warning alerts go to Telegram; critical alerts go to Telegram with higher urgency; alerts with a `remediation` label are additionally forwarded to the webhook receiver.
 - **Why chosen**: Native Prometheus integration. Supports grouping, inhibition, silencing, and multi-receiver routing. Prevents notification storms during cascading failures.
 - **Configuration**: `configs/alertmanager/alertmanager.yml`
 
@@ -214,8 +212,7 @@ Prometheus (scrapes every 15s)
     v
 Alertmanager (receives firing/resolved alerts)
     |
-    |--> Slack (#umas-alerts for warnings, #umas-critical for critical)
-    |--> Telegram (critical alerts only)
+    |--> Telegram (warnings and critical alerts)
     |--> Webhook Receiver (alerts with remediation label)
     |         |
     |         v
@@ -255,8 +252,8 @@ Prometheus evaluates rules every 15s
             |--> Group by [alertname, severity, instance]
             |--> Wait 30s (group_wait) before sending first notification
             |--> Route based on severity:
-            |       warning  --> slack-warnings receiver
-            |       critical --> critical-multi receiver (Slack + Telegram)
+            |       warning  --> telegram-warnings receiver
+            |       critical --> telegram-critical receiver
             |--> Route based on remediation label:
             |       remediation=* --> webhook-remediation receiver (continue=true)
             |--> Inhibition rules:
