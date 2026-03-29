@@ -1,0 +1,270 @@
+groups:
+  - name: host_alerts
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "The instance {{ $labels.instance }} has been unreachable for more than 1 minute."
+          runbook_url: "docs/runbook.md#instance-down"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage on {{ $labels.instance }} has been above 85% for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#high-cpu-usage"
+
+      - alert: CriticalCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical CPU usage on {{ $labels.instance }}"
+          description: "CPU usage on {{ $labels.instance }} has been above 95% for 2 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#critical-cpu-usage"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage on {{ $labels.instance }} has been above 85% for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#high-memory-usage"
+
+      - alert: HostOutOfMemory
+        expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Host out of memory on {{ $labels.instance }}"
+          description: "Available memory on {{ $labels.instance }} is below 10%. Current available: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#host-out-of-memory"
+
+      - alert: DiskSpaceWarning
+        expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space warning on {{ $labels.instance }}"
+          description: "Disk usage on {{ $labels.instance }} ({{ $labels.mountpoint }}) has been above 80% for 10 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#disk-space-warning"
+
+      - alert: DiskSpaceCritical
+        expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          remediation: disk_cleanup
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Disk usage on {{ $labels.instance }} ({{ $labels.mountpoint }}) has been above 90% for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#disk-space-critical"
+
+      - alert: DiskFillingUp
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[6h], 24*3600) < 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk filling up on {{ $labels.instance }}"
+          description: "Based on current trends, disk on {{ $labels.instance }} ({{ $labels.mountpoint }}) is predicted to fill within 24 hours."
+          runbook_url: "docs/runbook.md#disk-filling-up"
+
+      - alert: HighSystemLoad
+        expr: node_load1 > count by(instance) (node_cpu_seconds_total{mode="idle"})
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High system load on {{ $labels.instance }}"
+          description: "System load on {{ $labels.instance }} exceeds the number of CPUs for 10 minutes. Current load: {{ $value | printf \"%.2f\" }}."
+          runbook_url: "docs/runbook.md#high-system-load"
+
+      - alert: TooManyOpenFiles
+        expr: node_filefd_allocated / node_filefd_maximum * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many open files on {{ $labels.instance }}"
+          description: "File descriptor usage on {{ $labels.instance }} is above 80%. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#too-many-open-files"
+
+      - alert: NetworkReceiveErrors
+        expr: rate(node_network_receive_errs_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Network receive errors on {{ $labels.instance }}"
+          description: "Network interface {{ $labels.device }} on {{ $labels.instance }} is experiencing receive errors. Current rate: {{ $value | printf \"%.2f\" }} errors/s."
+          runbook_url: "docs/runbook.md#network-receive-errors"
+
+      - alert: HighSwapUsage
+        expr: (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes * 100 > 80 and node_memory_SwapTotal_bytes > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High swap usage on {{ $labels.instance }}"
+          description: "Swap usage on {{ $labels.instance }} is above 80%. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#high-swap-usage"
+
+      - alert: SystemdServiceFailed
+        expr: node_systemd_unit_state{state="failed"} == 1
+        for: 2m
+        labels:
+          severity: critical
+          remediation: restart_service
+        annotations:
+          summary: "Systemd service failed on {{ $labels.instance }}"
+          description: "Service {{ $labels.name }} on {{ $labels.instance }} is in a failed state."
+          runbook_url: "docs/runbook.md#systemd-service-failed"
+
+      - alert: HostClockSkew
+        expr: abs(node_timex_offset_seconds) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Clock skew detected on {{ $labels.instance }}"
+          description: "Clock on {{ $labels.instance }} is skewed by more than 50ms. Current offset: {{ $value | printf \"%.2f\" }}s."
+          runbook_url: "docs/runbook.md#host-clock-skew"
+
+      - alert: OOMKillDetected
+        expr: increase(node_vmstat_oom_kill[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "OOM kill detected on {{ $labels.instance }}"
+          description: "An OOM kill event was detected on {{ $labels.instance }} in the last 5 minutes."
+          runbook_url: "docs/runbook.md#oom-kill-detected"
+
+  - name: container_alerts
+    rules:
+      - alert: ContainerHighCPU
+        expr: sum by(name) (rate(container_cpu_usage_seconds_total{name!=""}[5m])) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} CPU usage has been above 80% for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#container-high-cpu"
+
+      - alert: ContainerHighMemory
+        expr: sum by(name) (container_memory_usage_bytes{name!=""}) / sum by(name) (container_spec_memory_limit_bytes{name!=""} > 0) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high memory on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} memory usage has been above 85% of its limit for 5 minutes. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#container-high-memory"
+
+      - alert: ContainerRestarting
+        expr: increase(container_restart_count{name!=""}[10m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} restarting frequently on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} has restarted more than 3 times in the last 10 minutes. Restart count increase: {{ $value | printf \"%.2f\" }}."
+          runbook_url: "docs/runbook.md#container-restarting"
+
+      - alert: ContainerKilled
+        expr: container_oom_events_total > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container OOM killed on {{ $labels.instance }}"
+          description: "A container on {{ $labels.instance }} was killed due to an out-of-memory event. Total OOM events: {{ $value | printf \"%.2f\" }}."
+          runbook_url: "docs/runbook.md#container-killed"
+
+  - name: monitoring_stack_alerts
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up{job=~"prometheus|alertmanager|grafana|loki"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target {{ $labels.job }} down on {{ $labels.instance }}"
+          description: "The monitoring target {{ $labels.job }} at {{ $labels.instance }} has been unreachable for more than 3 minutes."
+          runbook_url: "docs/runbook.md#prometheus-target-down"
+
+      - alert: PrometheusHighMemory
+        expr: process_resident_memory_bytes{job="prometheus"} / 536870912 * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus high memory usage on {{ $labels.instance }}"
+          description: "Prometheus memory usage on {{ $labels.instance }} is above 80% of 512MB. Current value: {{ $value | printf \"%.2f\" }}%."
+          runbook_url: "docs/runbook.md#prometheus-high-memory"
+
+      - alert: AlertmanagerNotificationFailed
+        expr: rate(alertmanager_notifications_failed_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager notification failures on {{ $labels.instance }}"
+          description: "Alertmanager on {{ $labels.instance }} is failing to send notifications. Failure rate: {{ $value | printf \"%.2f\" }}/s."
+          runbook_url: "docs/runbook.md#alertmanager-notification-failed"
+
+      - alert: LokiIngestionRate
+        expr: rate(loki_distributor_lines_received_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki ingestion stopped on {{ $labels.instance }}"
+          description: "Loki on {{ $labels.instance }} has not ingested any log lines in the last 5 minutes."
+          runbook_url: "docs/runbook.md#loki-ingestion-rate"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Grafana is down on {{ $labels.instance }}"
+          description: "Grafana at {{ $labels.instance }} has been unreachable for more than 2 minutes."
+          runbook_url: "docs/runbook.md#grafana-down"
+
+  - name: predictive_alerts
+    rules:
+      - alert: DiskWillFillIn4Hours
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}[1h], 4*3600) < 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk will fill in 4 hours on {{ $labels.instance }}"
+          description: "Based on current trends, disk on {{ $labels.instance }} ({{ $labels.mountpoint }}) is predicted to fill within 4 hours."
+          runbook_url: "docs/runbook.md#disk-will-fill-in-4-hours"
+
+      - alert: MemoryLeakDetected
+        expr: deriv(process_resident_memory_bytes[1h]) > 1048576
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory leak detected on {{ $labels.instance }}"
+          description: "Process on {{ $labels.instance }} (job {{ $labels.job }}) shows a steady memory increase exceeding 1MB/s over the last hour. Current rate: {{ $value | printf \"%.2f\" }} bytes/s."
+          runbook_url: "docs/runbook.md#memory-leak-detected"

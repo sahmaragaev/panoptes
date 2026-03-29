@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: umas
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: umas
+data:
+  datasources.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki:3100
+        editable: false
+
+      - name: Alertmanager
+        type: alertmanager
+        access: proxy
+        url: http://alertmanager:9093
+        editable: false
+        jsonData:
+          implementation: prometheus
+
+      - name: Zabbix
+        type: alexanderzobnin-zabbix-datasource
+        access: proxy
+        url: http://zabbix-web:8080/api_jsonrpc.php
+        editable: false
+        jsonData:
+          trends: true
+          trendsFrom: "7d"
+          trendsRange: "4d"
+          dbConnectionEnable: false

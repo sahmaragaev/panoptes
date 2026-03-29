@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: umas
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: umas
+data:
+  node-exporter-dashboard.json: |
+    {
+      "uid": "node-exporter",
+      "title": "Node Exporter Dashboard",
+      "tags": ["node-exporter", "prometheus"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "CPU Usage",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Memory Usage",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "targets": [
+            {
+              "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        }
+      ]
+    }
+  docker-containers-dashboard.json: |
+    {
+      "uid": "docker-containers",
+      "title": "Docker Containers Dashboard",
+      "tags": ["docker", "containers"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Container CPU Usage",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m])) by (name)",
+              "legendFormat": "{{name}}"
+            }
+          ]
+        }
+      ]
+    }
+  prometheus-overview-dashboard.json: |
+    {
+      "uid": "prometheus-overview",
+      "title": "Prometheus Overview Dashboard",
+      "tags": ["prometheus"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Total Targets",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "count(up)",
+              "legendFormat": "Targets"
+            }
+          ]
+        }
+      ]
+    }
+  alertmanager-dashboard.json: |
+    {
+      "uid": "alertmanager-overview",
+      "title": "Alertmanager Dashboard",
+      "tags": ["alertmanager"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Active Alerts",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "count(ALERTS{alertstate=\"firing\"})",
+              "legendFormat": "Firing"
+            }
+          ]
+        }
+      ]
+    }
+  loki-dashboard.json: |
+    {
+      "uid": "loki-overview",
+      "title": "Loki Dashboard",
+      "tags": ["loki", "logs"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Log Volume",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(rate({job=~\".+\"}[5m])) by (job)",
+              "legendFormat": "{{job}}"
+            }
+          ]
+        }
+      ]
+    }
+  cadvisor-dashboard.json: |
+    {
+      "uid": "cadvisor-overview",
+      "title": "cAdvisor Dashboard",
+      "tags": ["cadvisor", "containers"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Container Memory Usage",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "container_memory_usage_bytes{name!=\"\"}",
+              "legendFormat": "{{name}}"
+            }
+          ]
+        }
+      ]
+    }
+  custom-exporter-dashboard.json: |
+    {
+      "uid": "custom-exporter",
+      "title": "Custom Exporter Dashboard",
+      "tags": ["custom-exporter"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Custom Metrics",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "custom_metric_total",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        }
+      ]
+    }
+  zabbix-dashboard.json: |
+    {
+      "uid": "zabbix-overview",
+      "title": "Zabbix Dashboard",
+      "tags": ["zabbix"],
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "version": 1,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Zabbix Server Status",
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "up{job=\"zabbix-server\"}",
+              "legendFormat": "Status"
+            }
+          ]
+        }
+      ]
+    }

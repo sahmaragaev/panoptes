@@ -1,0 +1,37 @@
+server:
+  port: 9101
+  collection_interval: 15
+
+http_health:
+  enabled: true
+  timeout: 5
+  endpoints:
+    - name: grafana
+      url: http://grafana:3000/api/health
+    - name: prometheus
+      url: http://prometheus:9090/-/healthy
+    - name: alertmanager
+      url: http://alertmanager:9093/-/healthy
+    - name: loki
+      url: http://loki:3100/ready
+
+system_metrics:
+  enabled: true
+  auth_log_path: /var/log/auth.log
+
+ad_health:
+  enabled: false
+  domain_controllers:
+    - host: dc01.cedar.local
+      port: 636
+    - host: dc02.cedar.local
+      port: 636
+  domain: cedar.local
+
+certificate_expiry:
+  enabled: true
+  hosts:
+    - host: grafana.umas.example.com
+      port: 443
+    - host: prometheus.umas.example.com
+      port: 443

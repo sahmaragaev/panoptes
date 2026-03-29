@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: umas
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: umas
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: umas
+        environment: production
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - alertmanager:9093
+
+    rule_files:
+      - /etc/prometheus/alert_rules.yml
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets:
+              - localhost:9090
+
+      - job_name: node-exporter
+        static_configs:
+          - targets:
+              - node-exporter:9100
+
+      - job_name: alertmanager
+        static_configs:
+          - targets:
+              - alertmanager:9093
+
+      - job_name: grafana
+        static_configs:
+          - targets:
+              - grafana:3000
+
+      - job_name: loki
+        static_configs:
+          - targets:
+              - loki:3100
+
+      - job_name: cadvisor
+        static_configs:
+          - targets:
+              - cadvisor:8080
+
+      - job_name: custom-exporter
+        static_configs:
+          - targets:
+              - custom-exporter:9091
+
+      - job_name: zabbix-server
+        static_configs:
+          - targets:
+              - zabbix-server:10051
+
+  alert_rules.yml: |
+    groups:
+      - name: instance_alerts
+        rules:
+          - alert: InstanceDown
+            expr: up == 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Instance {{ $labels.instance }} is down"
+              description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."
+              runbook_url: "https://wiki.umas.local/runbooks/instance-down"
+
+          - alert: PrometheusTargetDown
+            expr: up{job!="prometheus"} == 0
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Prometheus target {{ $labels.job }} is down"
+              description: "The target {{ $labels.instance }} in job {{ $labels.job }} has been unreachable for more than 3 minutes."
+              runbook_url: "https://wiki.umas.local/runbooks/prometheus-target-down"
+
+      - name: resource_alerts
+        rules:
+          - alert: HighCPUUsage
+            expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on {{ $labels.instance }}"
+              description: "CPU usage on {{ $labels.instance }} has been above 80% for more than 10 minutes. Current value: {{ $value }}%."
+              runbook_url: "https://wiki.umas.local/runbooks/high-cpu-usage"
+
+          - alert: HighMemoryUsage
+            expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on {{ $labels.instance }}"
+              description: "Memory usage on {{ $labels.instance }} has been above 85% for more than 10 minutes. Current value: {{ $value }}%."
+              runbook_url: "https://wiki.umas.local/runbooks/high-memory-usage"
+
+          - alert: DiskSpaceCritical
+            expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 90
+            for: 5m
+            labels:
+              severity: critical
+              remediation: "Clean up disk space or expand volume. Check /var/log and /tmp for large files."
+            annotations:
+              summary: "Critical disk space on {{ $labels.instance }}"
+              description: "Disk usage on {{ $labels.instance }} mountpoint {{ $labels.mountpoint }} is above 90%. Current value: {{ $value }}%."
+              runbook_url: "https://wiki.umas.local/runbooks/disk-space-critical"
+
+      - name: container_alerts
+        rules:
+          - alert: ContainerHighCPU
+            expr: sum(rate(container_cpu_usage_seconds_total{name!=""}[5m])) by (name) > 0.8
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Container {{ $labels.name }} has high CPU usage"
+              description: "Container {{ $labels.name }} CPU usage has been above 80% for more than 10 minutes. Current value: {{ $value }}."
+              runbook_url: "https://wiki.umas.local/runbooks/container-high-cpu"

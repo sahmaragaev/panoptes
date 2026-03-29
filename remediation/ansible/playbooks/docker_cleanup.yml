@@ -1,0 +1,24 @@
+---
+- name: Docker Cleanup
+  hosts: "{{ target_host | default('localhost') }}"
+  become: yes
+  tasks:
+    - name: Remove stopped containers
+      ansible.builtin.command: docker container prune -f
+      ignore_errors: yes
+
+    - name: Remove dangling images
+      ansible.builtin.command: docker image prune -f
+      ignore_errors: yes
+
+    - name: Remove unused volumes
+      ansible.builtin.command: docker volume prune -f
+      ignore_errors: yes
+
+    - name: Remove unused networks
+      ansible.builtin.command: docker network prune -f
+      ignore_errors: yes
+
+    - name: Remove builder cache
+      ansible.builtin.command: docker builder prune -f
+      ignore_errors: yes

@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: umas
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: umas
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.${DOMAIN}`)
+      kind: Rule
+      services:
+        - name: grafana
+          port: 3000
