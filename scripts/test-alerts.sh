@@ -4,7 +4,7 @@ set -e
 ALERTMANAGER_URL="${ALERTMANAGER_URL:-http://localhost:9093}"
 
 echo "============================================"
-echo "        UMAS Alert Testing"
+echo "        PANOPTES Alert Testing"
 echo "============================================"
 echo ""
 
@@ -13,8 +13,8 @@ TEST2_RESULT="SKIPPED"
 TEST3_RESULT="SKIPPED"
 
 echo ">>> Test 1: InstanceDown alert (stop node-exporter)"
-echo "    Stopping umas-node-exporter-1..."
-docker stop umas-node-exporter-1 || true
+echo "    Stopping panoptes-node-exporter-1..."
+docker stop panoptes-node-exporter-1 || true
 
 echo "    Waiting 90 seconds for alert to fire..."
 sleep 90
@@ -29,17 +29,17 @@ else
     TEST1_RESULT="FAILED"
 fi
 
-echo "    Restarting umas-node-exporter-1..."
-docker start umas-node-exporter-1 || true
+echo "    Restarting panoptes-node-exporter-1..."
+docker start panoptes-node-exporter-1 || true
 echo ""
 
 echo ">>> Test 2: Disk pressure simulation"
-echo "    Creating 100MB test file at /tmp/umas_test..."
-dd if=/dev/zero of=/tmp/umas_test bs=1M count=100 2>/dev/null
+echo "    Creating 100MB test file at /tmp/panoptes_test..."
+dd if=/dev/zero of=/tmp/panoptes_test bs=1M count=100 2>/dev/null
 
 echo "    Verifying test file was created..."
-if [ -f /tmp/umas_test ]; then
-    FILE_SIZE=$(du -h /tmp/umas_test | cut -f1)
+if [ -f /tmp/panoptes_test ]; then
+    FILE_SIZE=$(du -h /tmp/panoptes_test | cut -f1)
     echo "    Test file created: ${FILE_SIZE}"
     TEST2_RESULT="PASSED"
 else
@@ -48,7 +48,7 @@ else
 fi
 
 echo "    Cleaning up test file..."
-rm -f /tmp/umas_test
+rm -f /tmp/panoptes_test
 echo ""
 
 echo ">>> Test 3: Direct Alertmanager API test alert"
@@ -58,14 +58,14 @@ RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${ALERTMANAGER_URL}/api/v2/alert
     -d '[
   {
     "labels": {
-      "alertname": "UMASTestAlert",
+      "alertname": "PANOPTESTestAlert",
       "severity": "warning",
       "instance": "test-instance:9090",
-      "job": "umas-test"
+      "job": "panoptes-test"
     },
     "annotations": {
-      "summary": "UMAS test alert fired manually",
-      "description": "This is a test alert sent by the UMAS alert testing script."
+      "summary": "PANOPTES test alert fired manually",
+      "description": "This is a test alert sent by the PANOPTES alert testing script."
     },
     "startsAt": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'",
     "generatorURL": "http://localhost:9090/graph"

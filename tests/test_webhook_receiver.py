@@ -39,11 +39,11 @@ SAMPLE_ALERT_PAYLOAD = {
             "labels": {
                 "alertname": "DiskSpaceCritical",
                 "severity": "critical",
-                "instance": "umas-vps:9100",
+                "instance": "panoptes-vps:9100",
                 "remediation": "disk_cleanup",
             },
             "annotations": {
-                "summary": "Disk space critical on umas-vps:9100",
+                "summary": "Disk space critical on panoptes-vps:9100",
                 "description": "Disk usage is above 90%",
             },
             "startsAt": "2026-01-01T00:00:00Z",
@@ -72,7 +72,7 @@ def test_webhook_valid_payload(mock_run):
     data = response.json()
     assert len(data["results"]) == 1
     assert data["results"][0]["remediation"] == "disk_cleanup"
-    assert data["results"][0]["target_host"] == "umas-vps"
+    assert data["results"][0]["target_host"] == "panoptes-vps"
 
 
 @patch("receiver.subprocess.run")
@@ -171,7 +171,7 @@ def test_history_endpoint(mock_run):
     assert len(data["history"]) == 1
     assert data["history"][0]["alert"] == "DiskSpaceCritical"
     assert data["history"][0]["remediation"] == "disk_cleanup"
-    assert data["history"][0]["target_host"] == "umas-vps"
+    assert data["history"][0]["target_host"] == "panoptes-vps"
 
 
 @patch("receiver.subprocess.run")
@@ -183,8 +183,8 @@ def test_cooldowns_endpoint(mock_run):
     response = client.get("/cooldowns")
     assert response.status_code == 200
     data = response.json()
-    assert "umas-vps:disk_cleanup" in data["cooldowns"]
-    cooldown_entry = data["cooldowns"]["umas-vps:disk_cleanup"]
+    assert "panoptes-vps:disk_cleanup" in data["cooldowns"]
+    cooldown_entry = data["cooldowns"]["panoptes-vps:disk_cleanup"]
     assert "remaining_seconds" in cooldown_entry
     assert cooldown_entry["remaining_seconds"] > 0
 

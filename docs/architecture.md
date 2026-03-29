@@ -1,6 +1,6 @@
-# UMAS Architecture
+# PANOPTES Architecture
 
-This document describes the architecture of the Unified Monitoring & Alerting System (UMAS), including component responsibilities, data flows, network topology, security considerations, and scaling strategies.
+This document describes the architecture of the Unified Monitoring & Alerting System (PANOPTES), including component responsibilities, data flows, network topology, security considerations, and scaling strategies.
 
 ---
 
@@ -20,7 +20,7 @@ This document describes the architecture of the Unified Monitoring & Alerting Sy
 
 ## System Overview
 
-UMAS is a multi-layered monitoring platform composed of four functional tiers:
+PANOPTES is a multi-layered monitoring platform composed of four functional tiers:
 
 1. **Data Collection Tier** -- Agents and exporters running on monitored hosts that collect metrics and logs
 2. **Storage and Processing Tier** -- Prometheus for time-series metrics, Loki for logs, PostgreSQL for Zabbix state
@@ -180,7 +180,7 @@ flowchart TB
 
 - **Image**: Custom Python build (`exporters/custom-exporter/`)
 - **Port**: 9101
-- **Purpose**: Collects UMAS-specific metrics that no off-the-shelf exporter provides:
+- **Purpose**: Collects PANOPTES-specific metrics that no off-the-shelf exporter provides:
   - **HTTP Health** -- Probes Grafana, Prometheus, Alertmanager, and Loki health endpoints
   - **Certificate Expiry** -- Monitors TLS certificate expiration for all public-facing services
   - **Active Directory Health** -- LDAP connectivity and replication checks for domain controllers (when enabled)
@@ -289,10 +289,10 @@ All ports are published to the host for development access. In production, only 
 
 ### Kubernetes (K3s) Deployment
 
-All resources are deployed in the `umas` namespace. Internal communication uses Kubernetes Service DNS (e.g., `prometheus.umas.svc.cluster.local`).
+All resources are deployed in the `panoptes` namespace. Internal communication uses Kubernetes Service DNS (e.g., `prometheus.panoptes.svc.cluster.local`).
 
 ```
-Namespace: umas
+Namespace: panoptes
 ├── Deployments:
 │   ├── prometheus        (ClusterIP :9090)
 │   ├── alertmanager      (ClusterIP :9093)
@@ -310,12 +310,12 @@ Namespace: umas
 │   ├── alertmanager-data (2Gi)
 │   └── zabbix-db-data    (10Gi)
 ├── Ingress (Traefik):
-│   ├── grafana.umas.example.com     -> grafana:3000
-│   ├── prometheus.umas.example.com  -> prometheus:9090
-│   ├── alertmanager.umas.example.com -> alertmanager:9093
-│   └── zabbix.umas.example.com     -> zabbix-web:8080
+│   ├── grafana.panoptes.example.com     -> grafana:3000
+│   ├── prometheus.panoptes.example.com  -> prometheus:9090
+│   ├── alertmanager.panoptes.example.com -> alertmanager:9093
+│   └── zabbix.panoptes.example.com     -> zabbix-web:8080
 └── Secret:
-    └── umas-secrets (from .env)
+    └── panoptes-secrets (from .env)
 ```
 
 External traffic enters through K3s's built-in Traefik Ingress controller with TLS termination.
@@ -358,7 +358,7 @@ External traffic enters through K3s's built-in Traefik Ingress controller with T
 ### Secret Management
 
 - **Environment variables**: Sensitive values (passwords, API tokens, webhook URLs) are stored in `.env` and never committed to version control
-- **Kubernetes Secrets**: In K3s, secrets are created from `.env` as a Kubernetes Secret (`umas-secrets`) and mounted into pods as environment variables
+- **Kubernetes Secrets**: In K3s, secrets are created from `.env` as a Kubernetes Secret (`panoptes-secrets`) and mounted into pods as environment variables
 - **`.gitignore`**: The `.env` file is excluded from version control
 
 ### Access Control

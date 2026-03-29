@@ -18,10 +18,10 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("umas-exporter")
+logger = logging.getLogger("panoptes-exporter")
 
 
-class UmasCollector:
+class PanoptesCollector:
     def __init__(self, collectors, collection_interval):
         self._collectors = collectors
         self._collection_interval = collection_interval
@@ -82,11 +82,11 @@ def main():
 
     collectors, enabled_names = build_collectors(config)
 
-    logger.info("Starting UMAS exporter on port %d", port)
+    logger.info("Starting PANOPTES exporter on port %d", port)
     logger.info("Enabled collectors: %s", ", ".join(enabled_names))
 
-    umas_collector = UmasCollector(collectors, collection_interval)
-    REGISTRY.register(umas_collector)
+    panoptes_collector = PanoptesCollector(collectors, collection_interval)
+    REGISTRY.register(panoptes_collector)
 
     start_http_server(port)
 

@@ -1,6 +1,6 @@
-# UMAS Operational Runbook
+# PANOPTES Operational Runbook
 
-This runbook provides investigation and resolution procedures for every alert configured in UMAS. Each entry includes the alert context, impact assessment, diagnostic steps, resolution actions, and escalation path.
+This runbook provides investigation and resolution procedures for every alert configured in PANOPTES. Each entry includes the alert context, impact assessment, diagnostic steps, resolution actions, and escalation path.
 
 ---
 
@@ -921,7 +921,7 @@ A Docker container is using more than 80% of its allocated CPU time for 5 minute
 
 #### Escalation
 
-If the container is part of the monitoring stack, escalate to the UMAS team. If it is an application container, escalate to the application team.
+If the container is part of the monitoring stack, escalate to the PANOPTES team. If it is an application container, escalate to the application team.
 
 ---
 
@@ -972,7 +972,7 @@ A container is using more than 85% of its configured memory limit. If it reaches
 
 #### Escalation
 
-If the container is a monitoring component (Prometheus, Loki), escalate to the UMAS team.
+If the container is a monitoring component (Prometheus, Loki), escalate to the PANOPTES team.
 
 ---
 
@@ -1141,7 +1141,7 @@ A core monitoring stack component (Prometheus itself, Alertmanager, Grafana, or 
 
 #### Escalation
 
-If a core monitoring component cannot be restored, the entire monitoring pipeline is degraded. Escalate to the UMAS team immediately.
+If a core monitoring component cannot be restored, the entire monitoring pipeline is degraded. Escalate to the PANOPTES team immediately.
 
 ---
 
@@ -1224,7 +1224,7 @@ Alertmanager is failing to deliver notifications through one or more channels (T
 3. **Test Telegram bot:**
    ```bash
    curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-     -d "chat_id=${TELEGRAM_CHAT_ID}&text=UMAS test notification"
+     -d "chat_id=${TELEGRAM_CHAT_ID}&text=PANOPTES test notification"
    ```
 
 4. **Test webhook receiver:**
@@ -1302,7 +1302,7 @@ Loki has not received any log lines in the last 5 minutes. The log pipeline is b
 
 #### Escalation
 
-If the log pipeline cannot be restored, escalate to the UMAS team. Note that during the outage, logs are not being collected and may be lost.
+If the log pipeline cannot be restored, escalate to the PANOPTES team. Note that during the outage, logs are not being collected and may be lost.
 
 ---
 
@@ -1357,7 +1357,7 @@ Grafana is unreachable. Prometheus cannot scrape the Grafana health endpoint.
 
 #### Escalation
 
-If Grafana cannot be restored, the team loses dashboard access. Metrics and alerts are unaffected. Escalate to the UMAS team.
+If Grafana cannot be restored, the team loses dashboard access. Metrics and alerts are unaffected. Escalate to the PANOPTES team.
 
 ---
 
@@ -1574,7 +1574,7 @@ curl http://localhost:5001/cooldowns | python3 -m json.tool
 
 ## Log Locations
 
-### On the UMAS Host
+### On the PANOPTES Host
 
 | Log | Location | Description |
 |---|---|---|
@@ -1606,7 +1606,7 @@ curl http://localhost:5001/cooldowns | python3 -m json.tool
 | Level | Criteria | Response Time | Action |
 |---|---|---|---|
 | P1 - Critical | Service outage, data loss risk, multiple systems affected | 15 minutes | Page on-call engineer, join incident channel |
-| P2 - High | Single system degraded, critical alert firing | 1 hour | Notify on-call engineer via Telegram/Slack |
+| P2 - High | Single system degraded, critical alert firing | 1 hour | Notify on-call engineer via Telegram |
 | P3 - Medium | Warning alert sustained, performance degradation | 4 hours | Create a ticket, investigate during business hours |
 | P4 - Low | Informational, predictive alert | Next business day | Add to backlog, review in weekly ops meeting |
 
@@ -1614,7 +1614,7 @@ curl http://localhost:5001/cooldowns | python3 -m json.tool
 
 | Role | Responsibility | When to Contact |
 |---|---|---|
-| UMAS Team | Monitoring platform issues | Any monitoring stack alert |
+| PANOPTES Team | Monitoring platform issues | Any monitoring stack alert |
 | Infrastructure Team | Server hardware, networking, capacity | Host unreachable, hardware failure, capacity request |
 | Application Team | Application-specific issues | Application crashes, memory leaks, configuration errors |
 | Network Team | Network connectivity, firewall, DNS | Network errors, DNS issues, firewall changes |

@@ -1,9 +1,9 @@
 {
   "id": null,
-  "uid": "umas-system-health",
-  "title": "UMAS System Health",
-  "description": "Self-monitoring dashboard for the UMAS observability stack",
-  "tags": ["umas", "system", "health", "self-monitoring"],
+  "uid": "panoptes-system-health",
+  "title": "PANOPTES System Health",
+  "description": "Self-monitoring dashboard for the PANOPTES observability stack",
+  "tags": ["panoptes", "system", "health", "self-monitoring"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

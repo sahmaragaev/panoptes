@@ -18,7 +18,7 @@
   "uid": "active-directory",
   "title": "Active Directory & DNS",
   "description": "Windows Server Active Directory and DNS monitoring",
-  "tags": ["active-directory", "dns", "windows", "umas"],
+  "tags": ["active-directory", "dns", "windows", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

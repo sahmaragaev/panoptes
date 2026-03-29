@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: zabbix-web
-  namespace: umas
+  namespace: panoptes
 spec:
   replicas: 1
   selector:
@@ -32,7 +32,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: umas-secrets
+                  name: panoptes-secrets
                   key: ZABBIX_DB_PASSWORD
             - name: PHP_TZ
               value: Asia/Baku

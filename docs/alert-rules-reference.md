@@ -1,6 +1,6 @@
-# UMAS Alert Rules Reference
+# PANOPTES Alert Rules Reference
 
-Complete reference for all 26 alert rules configured in UMAS, including expressions, thresholds, routing behavior, and guidance on creating custom alerts.
+Complete reference for all 26 alert rules configured in PANOPTES, including expressions, thresholds, routing behavior, and guidance on creating custom alerts.
 
 ---
 
@@ -68,7 +68,7 @@ Complete reference for all 26 alert rules configured in UMAS, including expressi
 
 ## Alert Severity Levels
 
-UMAS uses two severity levels that determine notification routing and urgency.
+PANOPTES uses two severity levels that determine notification routing and urgency.
 
 ### Warning
 

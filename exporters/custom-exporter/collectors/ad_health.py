@@ -5,20 +5,20 @@ import time
 from ldap3 import Connection, Server, Tls
 from prometheus_client import Gauge
 
-logger = logging.getLogger("umas-exporter.ad_health")
+logger = logging.getLogger("panoptes-exporter.ad_health")
 
 AD_LDAP_BIND_SECONDS = Gauge(
-    "umas_ad_ldap_bind_seconds",
+    "panoptes_ad_ldap_bind_seconds",
     "Time to bind to the domain controller via LDAP",
     ["dc"],
 )
 AD_DNS_RESOLUTION_UP = Gauge(
-    "umas_ad_dns_resolution_up",
+    "panoptes_ad_dns_resolution_up",
     "Whether DNS resolution for the domain is working",
     ["domain"],
 )
 AD_REPLICATION_PARTNER_UP = Gauge(
-    "umas_ad_replication_partner_up",
+    "panoptes_ad_replication_partner_up",
     "Whether the replication partner is reachable",
     ["dc"],
 )

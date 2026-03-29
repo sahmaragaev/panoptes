@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: umas
+    cluster: panoptes
     environment: production
 
 alerting:
@@ -22,7 +22,7 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
         labels:
-          hostname: 'umas-vps'
+          hostname: 'panoptes-vps'
 
   - job_name: 'alertmanager'
     static_configs:

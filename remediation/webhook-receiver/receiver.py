@@ -27,7 +27,7 @@ console_handler.setLevel(getattr(logging, CONFIG["logging"]["level"], logging.IN
 console_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 logger.addHandler(console_handler)
 
-app = FastAPI(title="UMAS Remediation Webhook Receiver")
+app = FastAPI(title="Panoptes Remediation Webhook Receiver")
 
 PLAYBOOK_MAP = {
     "disk_cleanup": "playbooks/disk_cleanup.yml",

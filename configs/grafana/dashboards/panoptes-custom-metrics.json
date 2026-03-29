@@ -1,9 +1,9 @@
 {
   "id": null,
-  "uid": "umas-custom-metrics",
-  "title": "UMAS Custom Metrics",
-  "description": "Custom exporter metrics for UMAS monitoring",
-  "tags": ["umas", "custom", "exporter"],
+  "uid": "panoptes-custom-metrics",
+  "title": "PANOPTES Custom Metrics",
+  "description": "Custom exporter metrics for PANOPTES monitoring",
+  "tags": ["panoptes", "custom", "exporter"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,
@@ -30,7 +30,7 @@
           "type": "prometheus",
           "uid": null
         },
-        "query": "label_values(umas_endpoint_up, name)",
+        "query": "label_values(panoptes_endpoint_up, name)",
         "refresh": 2,
         "includeAll": true,
         "multi": true,
@@ -64,7 +64,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_endpoint_up{name=~\"$endpoint\"}",
+          "expr": "panoptes_endpoint_up{name=~\"$endpoint\"}",
           "instant": true,
           "legendFormat": "{{name}}"
         }
@@ -132,7 +132,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "sum(increase(umas_endpoint_response_seconds_bucket{name=~\"$endpoint\"}[$__rate_interval])) by (le)",
+          "expr": "sum(increase(panoptes_endpoint_response_seconds_bucket{name=~\"$endpoint\"}[$__rate_interval])) by (le)",
           "format": "heatmap",
           "legendFormat": "{{le}}"
         }
@@ -217,7 +217,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "sum by (name, code) (rate(umas_endpoint_status_code{name=~\"$endpoint\"}[$__rate_interval]))",
+          "expr": "sum by (name, code) (rate(panoptes_endpoint_status_code{name=~\"$endpoint\"}[$__rate_interval]))",
           "legendFormat": "{{name}} - {{code}}"
         }
       ],
@@ -346,7 +346,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_cert_expiry_days{name=~\"$endpoint\"}",
+          "expr": "panoptes_cert_expiry_days{name=~\"$endpoint\"}",
           "instant": true,
           "legendFormat": "{{name}}"
         }
@@ -398,7 +398,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_cert_valid{name=~\"$endpoint\"}",
+          "expr": "panoptes_cert_valid{name=~\"$endpoint\"}",
           "instant": true,
           "legendFormat": "{{name}}"
         }
@@ -466,7 +466,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "rate(umas_failed_ssh_total[$__rate_interval])",
+          "expr": "rate(panoptes_failed_ssh_total[$__rate_interval])",
           "legendFormat": "Failed SSH Rate"
         },
         {
@@ -475,7 +475,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_failed_ssh_total",
+          "expr": "panoptes_failed_ssh_total",
           "legendFormat": "Total Count"
         }
       ],
@@ -579,7 +579,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_logged_in_users",
+          "expr": "panoptes_logged_in_users",
           "instant": true,
           "legendFormat": "Users"
         }
@@ -630,7 +630,7 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "umas_zombie_count",
+          "expr": "panoptes_zombie_count",
           "instant": true,
           "legendFormat": "Zombies"
         }

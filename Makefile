@@ -36,8 +36,8 @@ validate-alerts:
 	promtool check rules configs/prometheus/alert_rules.yml
 
 build-exporters:
-	docker build -t umas-custom-exporter ./exporters/custom-exporter
-	docker build -t umas-webhook-receiver ./remediation/webhook-receiver
+	docker build -t panoptes-custom-exporter ./exporters/custom-exporter
+	docker build -t panoptes-webhook-receiver ./remediation/webhook-receiver
 
 validate:
 	promtool check config configs/prometheus/prometheus.yml

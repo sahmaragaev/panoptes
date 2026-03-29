@@ -13,7 +13,7 @@ $ZabbixConfFile = Join-Path $ZabbixConfDir "zabbix_agentd.conf"
 $ZabbixConfDDir = Join-Path $ZabbixConfDir "zabbix_agentd.d"
 
 Write-Host "============================================"
-Write-Host "  UMAS Zabbix Agent Installation"
+Write-Host "  PANOPTES Zabbix Agent Installation"
 Write-Host "============================================"
 Write-Host ""
 Write-Host "  Zabbix Server IP: ${ServerIP}"

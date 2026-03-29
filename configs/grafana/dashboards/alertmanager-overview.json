@@ -3,7 +3,7 @@
   "uid": "alertmanager-overview",
   "title": "Alertmanager Overview",
   "description": "Alert management and notification monitoring dashboard",
-  "tags": ["alertmanager", "alerts", "umas"],
+  "tags": ["alertmanager", "alerts", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

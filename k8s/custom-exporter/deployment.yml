@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: custom-exporter
-  namespace: umas
+  namespace: panoptes
 spec:
   replicas: 2
   selector:
@@ -18,7 +18,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: custom-exporter
-          image: umas/custom-exporter:latest
+          image: panoptes/custom-exporter:latest
           ports:
             - containerPort: 9101
           env:

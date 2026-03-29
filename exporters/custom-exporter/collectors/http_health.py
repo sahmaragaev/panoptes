@@ -4,21 +4,21 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 from prometheus_client import Gauge, Histogram
 
-logger = logging.getLogger("umas-exporter.http_health")
+logger = logging.getLogger("panoptes-exporter.http_health")
 
 ENDPOINT_UP = Gauge(
-    "umas_endpoint_up",
+    "panoptes_endpoint_up",
     "Whether the endpoint is reachable",
     ["name", "url"],
 )
 ENDPOINT_RESPONSE_SECONDS = Histogram(
-    "umas_endpoint_response_seconds",
+    "panoptes_endpoint_response_seconds",
     "HTTP response time in seconds",
     ["name"],
     buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0],
 )
 ENDPOINT_STATUS_CODE = Gauge(
-    "umas_endpoint_status_code",
+    "panoptes_endpoint_status_code",
     "HTTP status code of the endpoint",
     ["name", "url"],
 )

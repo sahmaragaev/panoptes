@@ -18,7 +18,7 @@
   "uid": "infrastructure-overview",
   "title": "Infrastructure Overview",
   "description": "High-level overview of all monitored infrastructure",
-  "tags": ["infrastructure", "overview", "umas"],
+  "tags": ["infrastructure", "overview", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

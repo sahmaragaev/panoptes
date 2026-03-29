@@ -7,7 +7,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "============================================"
-echo "          UMAS VPS Setup"
+echo "          PANOPTES VPS Setup"
 echo "============================================"
 echo ""
 
@@ -92,5 +92,5 @@ echo "UFW status:"
 ufw status
 echo ""
 echo "============================================"
-echo "          UMAS VPS Setup finished"
+echo "          PANOPTES VPS Setup finished"
 echo "============================================"

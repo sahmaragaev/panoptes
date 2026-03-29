@@ -2,10 +2,10 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: node-exporter
-  namespace: umas
+  namespace: panoptes
   labels:
     app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/part-of: umas
+    app.kubernetes.io/part-of: panoptes
 spec:
   selector:
     matchLabels:
@@ -14,7 +14,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: node-exporter
-        app.kubernetes.io/part-of: umas
+        app.kubernetes.io/part-of: panoptes
     spec:
       hostNetwork: true
       hostPID: true

@@ -2,17 +2,17 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
-  namespace: umas
+  namespace: panoptes
   labels:
     app.kubernetes.io/name: prometheus
-    app.kubernetes.io/part-of: umas
+    app.kubernetes.io/part-of: panoptes
 data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
       evaluation_interval: 15s
       external_labels:
-        cluster: umas
+        cluster: panoptes
         environment: production
 
     alerting:
@@ -77,7 +77,7 @@ data:
             annotations:
               summary: "Instance {{ $labels.instance }} is down"
               description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."
-              runbook_url: "https://wiki.umas.local/runbooks/instance-down"
+              runbook_url: "https://wiki.panoptes.local/runbooks/instance-down"
 
           - alert: PrometheusTargetDown
             expr: up{job!="prometheus"} == 0
@@ -87,7 +87,7 @@ data:
             annotations:
               summary: "Prometheus target {{ $labels.job }} is down"
               description: "The target {{ $labels.instance }} in job {{ $labels.job }} has been unreachable for more than 3 minutes."
-              runbook_url: "https://wiki.umas.local/runbooks/prometheus-target-down"
+              runbook_url: "https://wiki.panoptes.local/runbooks/prometheus-target-down"
 
       - name: resource_alerts
         rules:
@@ -99,7 +99,7 @@ data:
             annotations:
               summary: "High CPU usage on {{ $labels.instance }}"
               description: "CPU usage on {{ $labels.instance }} has been above 80% for more than 10 minutes. Current value: {{ $value }}%."
-              runbook_url: "https://wiki.umas.local/runbooks/high-cpu-usage"
+              runbook_url: "https://wiki.panoptes.local/runbooks/high-cpu-usage"
 
           - alert: HighMemoryUsage
             expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
@@ -109,7 +109,7 @@ data:
             annotations:
               summary: "High memory usage on {{ $labels.instance }}"
               description: "Memory usage on {{ $labels.instance }} has been above 85% for more than 10 minutes. Current value: {{ $value }}%."
-              runbook_url: "https://wiki.umas.local/runbooks/high-memory-usage"
+              runbook_url: "https://wiki.panoptes.local/runbooks/high-memory-usage"
 
           - alert: DiskSpaceCritical
             expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 90
@@ -120,7 +120,7 @@ data:
             annotations:
               summary: "Critical disk space on {{ $labels.instance }}"
               description: "Disk usage on {{ $labels.instance }} mountpoint {{ $labels.mountpoint }} is above 90%. Current value: {{ $value }}%."
-              runbook_url: "https://wiki.umas.local/runbooks/disk-space-critical"
+              runbook_url: "https://wiki.panoptes.local/runbooks/disk-space-critical"
 
       - name: container_alerts
         rules:
@@ -132,4 +132,4 @@ data:
             annotations:
               summary: "Container {{ $labels.name }} has high CPU usage"
               description: "Container {{ $labels.name }} CPU usage has been above 80% for more than 10 minutes. Current value: {{ $value }}."
-              runbook_url: "https://wiki.umas.local/runbooks/container-high-cpu"
+              runbook_url: "https://wiki.panoptes.local/runbooks/container-high-cpu"

@@ -2,10 +2,10 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: grafana
-  namespace: umas
+  namespace: panoptes
   labels:
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/part-of: umas
+    app.kubernetes.io/part-of: panoptes
 spec:
   entryPoints:
     - websecure

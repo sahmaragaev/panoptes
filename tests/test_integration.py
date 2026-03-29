@@ -66,7 +66,7 @@ def test_custom_exporter_metrics(http_session):
         "http://localhost:9101/metrics", timeout=10
     )
     assert response.status_code == 200
-    assert "umas_" in response.text
+    assert "panoptes_" in response.text
 
 
 def test_webhook_receiver_health(http_session):

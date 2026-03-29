@@ -4,26 +4,26 @@ import subprocess
 
 from prometheus_client import Counter, Gauge
 
-logger = logging.getLogger("umas-exporter.system_metrics")
+logger = logging.getLogger("panoptes-exporter.system_metrics")
 
 PROCESS_COUNT = Gauge(
-    "umas_process_count",
+    "panoptes_process_count",
     "Total number of running processes",
 )
 ZOMBIE_COUNT = Gauge(
-    "umas_zombie_count",
+    "panoptes_zombie_count",
     "Number of zombie processes",
 )
 FAILED_SSH_TOTAL = Counter(
-    "umas_failed_ssh_total",
+    "panoptes_failed_ssh_total",
     "Total number of failed SSH login attempts",
 )
 FD_USAGE_RATIO = Gauge(
-    "umas_fd_usage_ratio",
+    "panoptes_fd_usage_ratio",
     "Ratio of used file descriptors to maximum",
 )
 LOGGED_IN_USERS = Gauge(
-    "umas_logged_in_users",
+    "panoptes_logged_in_users",
     "Number of currently logged in users",
 )
 

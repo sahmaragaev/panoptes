@@ -2,10 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: alertmanager-config
-  namespace: umas
+  namespace: panoptes
   labels:
     app.kubernetes.io/name: alertmanager
-    app.kubernetes.io/part-of: umas
+    app.kubernetes.io/part-of: panoptes
 data:
   alertmanager.yml: |
     global:

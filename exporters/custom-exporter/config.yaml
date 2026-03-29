@@ -31,7 +31,7 @@ ad_health:
 certificate_expiry:
   enabled: true
   hosts:
-    - host: grafana.umas.example.com
+    - host: grafana.panoptes.example.com
       port: 443
-    - host: prometheus.umas.example.com
+    - host: prometheus.panoptes.example.com
       port: 443

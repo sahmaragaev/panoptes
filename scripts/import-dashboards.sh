@@ -2,7 +2,7 @@
 set -e
 
 GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
-GRAFANA_AUTH="${GRAFANA_AUTH:-admin:umas2026}"
+GRAFANA_AUTH="${GRAFANA_AUTH:-admin:panoptes2026}"
 
 DASHBOARD_IDS=(
     "1860:Node Exporter Full"
@@ -12,7 +12,7 @@ DASHBOARD_IDS=(
 )
 
 echo "============================================"
-echo "      UMAS Grafana Dashboard Import"
+echo "      PANOPTES Grafana Dashboard Import"
 echo "============================================"
 echo ""
 echo "Grafana URL: ${GRAFANA_URL}"

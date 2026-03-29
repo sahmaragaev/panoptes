@@ -2,10 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: grafana-datasources
-  namespace: umas
+  namespace: panoptes
   labels:
     app.kubernetes.io/name: grafana
-    app.kubernetes.io/part-of: umas
+    app.kubernetes.io/part-of: panoptes
 data:
   datasources.yml: |
     apiVersion: 1

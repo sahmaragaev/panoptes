@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: cadvisor
-  namespace: umas
+  namespace: panoptes
 spec:
   selector:
     matchLabels:

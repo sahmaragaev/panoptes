@@ -3,7 +3,7 @@
   "uid": "loki-logs",
   "title": "Log Explorer",
   "description": "Log exploration dashboard powered by Loki",
-  "tags": ["loki", "logs", "umas"],
+  "tags": ["loki", "logs", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

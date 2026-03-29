@@ -6,7 +6,7 @@ $MsiPath = Join-Path $env:TEMP "windows_exporter-${ExporterVersion}-amd64.msi"
 $Collectors = "ad,dns,dhcp,cpu,memory,net,logical_disk,os,service,system,time,cache,process"
 
 Write-Host "============================================"
-Write-Host "  UMAS Windows Exporter Installation"
+Write-Host "  PANOPTES Windows Exporter Installation"
 Write-Host "============================================"
 Write-Host ""
 

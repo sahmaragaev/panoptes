@@ -1,4 +1,4 @@
-# UMAS Demo Script
+# PANOPTES Demo Script
 
 Step-by-step presentation guide for demonstrating the Unified Monitoring & Alerting System. This script covers the full demo flow, talking points, contingency plans, and Q&A preparation.
 
@@ -34,7 +34,7 @@ Complete these steps **at least 30 minutes before** the demo begins.
 
 - [ ] All containers are running: `docker compose ps` (12 services should show `Up`)
 - [ ] Prometheus targets are all UP: Open http://localhost:9090/targets
-- [ ] Grafana is accessible: Open http://localhost:3000 and log in (admin / umas2026)
+- [ ] Grafana is accessible: Open http://localhost:3000 and log in (admin / panoptes2026)
 - [ ] Alertmanager is accessible: Open http://localhost:9093
 - [ ] Webhook receiver is healthy: `curl http://localhost:5001/health`
 - [ ] No alerts are currently firing: Check http://localhost:9090/alerts
@@ -51,14 +51,14 @@ Complete these steps **at least 30 minutes before** the demo begins.
 2. Grafana - Infrastructure Overview dashboard
 3. Grafana - Node Detail dashboard
 4. Grafana - Loki Logs dashboard
-5. Grafana - UMAS Custom Metrics dashboard
+5. Grafana - PANOPTES Custom Metrics dashboard
 6. Prometheus Targets page (http://localhost:9090/targets)
 7. Alertmanager UI (http://localhost:9093)
 8. Telegram group -- visible on screen or second monitor
 
 ### Terminal Windows
 
-- [ ] Terminal 1: Ready for running simulation scripts (in the `umas/` project directory)
+- [ ] Terminal 1: Ready for running simulation scripts (in the `panoptes/` project directory)
 - [ ] Terminal 2: Tailing Alertmanager logs: `docker compose logs -f alertmanager`
 - [ ] Terminal 3: Tailing webhook receiver logs: `docker compose logs -f webhook-receiver`
 
@@ -75,7 +75,7 @@ Complete these steps **at least 30 minutes before** the demo begins.
 
 ### Talking Points
 
-> "UMAS, the Unified Monitoring and Alerting System, is designed for the CeDAR infrastructure at ADA University. It brings together multiple open-source monitoring tools into a single platform."
+> "PANOPTES, the Unified Monitoring and Alerting System, is designed for the CeDAR infrastructure at ADA University. It brings together multiple open-source monitoring tools into a single platform."
 
 Show the architecture diagram (from `docs/architecture.md` or a prepared slide) and walk through:
 
@@ -124,7 +124,7 @@ Show the architecture diagram (from `docs/architecture.md` or a prepared slide) 
 
 **Duration**: 2-3 minutes
 
-**Action**: Switch to the Node Detail dashboard. Select the UMAS VPS host from the dropdown.
+**Action**: Switch to the Node Detail dashboard. Select the PANOPTES VPS host from the dropdown.
 
 #### What to Show
 
@@ -299,7 +299,7 @@ curl -X POST http://localhost:5001/webhook \
 
 #### Talking Points
 
-> "This is where UMAS goes beyond traditional monitoring. When an alert fires with a 'remediation' label, Alertmanager routes it to our webhook receiver in addition to the normal notification channels."
+> "This is where PANOPTES goes beyond traditional monitoring. When an alert fires with a 'remediation' label, Alertmanager routes it to our webhook receiver in addition to the normal notification channels."
 
 > "The webhook receiver extracts the remediation type and target host from the alert payload, then maps it to an Ansible playbook. In this case, DiskSpaceCritical triggers the disk_cleanup playbook."
 
@@ -312,7 +312,7 @@ curl -X POST http://localhost:5001/webhook \
 #### Cleanup (if using Option A)
 
 ```bash
-rm /tmp/umas_disk_test
+rm /tmp/panoptes_disk_test
 ```
 
 ---
@@ -342,7 +342,7 @@ rm /tmp/umas_disk_test
 
 #### Talking Points
 
-> "UMAS does not just collect metrics -- it also aggregates logs. Promtail ships logs from four sources: system logs, auth logs, Docker container logs via Docker service discovery, and systemd journal entries."
+> "PANOPTES does not just collect metrics -- it also aggregates logs. Promtail ships logs from four sources: system logs, auth logs, Docker container logs via Docker service discovery, and systemd journal entries."
 
 > "Loki uses label-based indexing rather than full-text indexing. This means it is significantly more resource-efficient than Elasticsearch. You query by labels first, then filter the content."
 
@@ -356,7 +356,7 @@ rm /tmp/umas_disk_test
 
 **Duration**: 2 minutes
 
-**Action**: Switch to the UMAS Custom Metrics dashboard (or a dedicated AD dashboard if available).
+**Action**: Switch to the PANOPTES Custom Metrics dashboard (or a dedicated AD dashboard if available).
 
 #### What to Show
 
@@ -393,7 +393,7 @@ rm /tmp/umas_disk_test
 
 #### Talking Points
 
-> "A monitoring system that cannot monitor itself is a liability. UMAS has 5 dedicated alert rules for self-monitoring."
+> "A monitoring system that cannot monitor itself is a liability. PANOPTES has 5 dedicated alert rules for self-monitoring."
 
 > "PrometheusTargetDown fires if any core monitoring component goes down. AlertmanagerNotificationFailed fires if alert delivery fails. These are our 'meta-alerts' -- they watch the watchers."
 
@@ -415,7 +415,7 @@ pkill stress-ng 2>/dev/null
 docker start node-exporter 2>/dev/null
 
 # Remove the disk test file
-rm -f /tmp/umas_disk_test
+rm -f /tmp/panoptes_disk_test
 
 # Wait for alerts to resolve (or manually check)
 curl -s http://localhost:9090/api/v1/alerts | python3 -c "

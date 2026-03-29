@@ -18,7 +18,7 @@
   "uid": "docker-containers",
   "title": "Docker Containers",
   "description": "Container metrics from cAdvisor",
-  "tags": ["docker", "containers", "cadvisor", "umas"],
+  "tags": ["docker", "containers", "cadvisor", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

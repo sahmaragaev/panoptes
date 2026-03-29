@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webhook-receiver
-  namespace: umas
+  namespace: panoptes
 spec:
   replicas: 1
   selector:
@@ -18,7 +18,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: webhook-receiver
-          image: umas/webhook-receiver:latest
+          image: panoptes/webhook-receiver:latest
           ports:
             - containerPort: 5001
           resources:

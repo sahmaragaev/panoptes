@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: umas-ingress
-  namespace: umas
+  name: panoptes-ingress
+  namespace: panoptes
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -10,13 +10,13 @@ metadata:
 spec:
   tls:
     - hosts:
-        - grafana.umas.example.com
-        - prometheus.umas.example.com
-        - alertmanager.umas.example.com
-        - zabbix.umas.example.com
-      secretName: umas-tls
+        - grafana.panoptes.example.com
+        - prometheus.panoptes.example.com
+        - alertmanager.panoptes.example.com
+        - zabbix.panoptes.example.com
+      secretName: panoptes-tls
   rules:
-    - host: grafana.umas.example.com
+    - host: grafana.panoptes.example.com
       http:
         paths:
           - path: /
@@ -26,7 +26,7 @@ spec:
                 name: grafana
                 port:
                   number: 3000
-    - host: prometheus.umas.example.com
+    - host: prometheus.panoptes.example.com
       http:
         paths:
           - path: /
@@ -36,7 +36,7 @@ spec:
                 name: prometheus
                 port:
                   number: 9090
-    - host: alertmanager.umas.example.com
+    - host: alertmanager.panoptes.example.com
       http:
         paths:
           - path: /
@@ -46,7 +46,7 @@ spec:
                 name: alertmanager
                 port:
                   number: 9093
-    - host: zabbix.umas.example.com
+    - host: zabbix.panoptes.example.com
       http:
         paths:
           - path: /

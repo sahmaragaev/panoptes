@@ -1,4 +1,4 @@
-# UMAS Setup Guide
+# PANOPTES Setup Guide
 
 Complete guide for deploying the Unified Monitoring & Alerting System from scratch on a VPS or local development environment.
 
@@ -62,20 +62,20 @@ If deploying with public-facing dashboards, configure DNS A records pointing to 
 
 | Subdomain | Record Type | Value | Purpose |
 |---|---|---|---|
-| `grafana.umas.example.com` | A | `<VPS_IP>` | Grafana dashboards |
-| `prometheus.umas.example.com` | A | `<VPS_IP>` | Prometheus UI and API |
-| `alertmanager.umas.example.com` | A | `<VPS_IP>` | Alertmanager UI |
-| `zabbix.umas.example.com` | A | `<VPS_IP>` | Zabbix Web interface |
+| `grafana.panoptes.example.com` | A | `<VPS_IP>` | Grafana dashboards |
+| `prometheus.panoptes.example.com` | A | `<VPS_IP>` | Prometheus UI and API |
+| `alertmanager.panoptes.example.com` | A | `<VPS_IP>` | Alertmanager UI |
+| `zabbix.panoptes.example.com` | A | `<VPS_IP>` | Zabbix Web interface |
 
-Replace `umas.example.com` with your actual domain. Update the `DOMAIN` variable in `.env` accordingly.
+Replace `panoptes.example.com` with your actual domain. Update the `DOMAIN` variable in `.env` accordingly.
 
 ### DNS Propagation
 
 After creating records, verify propagation:
 
 ```bash
-dig +short grafana.umas.example.com
-dig +short prometheus.umas.example.com
+dig +short grafana.panoptes.example.com
+dig +short prometheus.panoptes.example.com
 ```
 
 DNS propagation typically takes 5-30 minutes depending on the provider.
@@ -93,8 +93,8 @@ The `scripts/setup-vps.sh` script automates the initial server configuration.
 ssh root@<VPS_IP>
 
 # Clone the repository
-git clone https://github.com/ada-university/umas.git /opt/monitoring/umas
-cd /opt/monitoring/umas
+git clone https://github.com/ada-university/panoptes.git /opt/monitoring/panoptes
+cd /opt/monitoring/panoptes
 
 # Run the provisioning script (must be root)
 bash scripts/setup-vps.sh
@@ -141,8 +141,8 @@ This is the simplest deployment method, suitable for single-server setups and de
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/ada-university/umas.git
-cd umas
+git clone https://github.com/ada-university/panoptes.git
+cd panoptes
 ```
 
 ### Step 2: Create Environment File
@@ -209,7 +209,7 @@ webhook-receiver   Up
 
 | Service | URL | Default Credentials |
 |---|---|---|
-| Grafana | http://localhost:3000 | admin / umas2026 |
+| Grafana | http://localhost:3000 | admin / panoptes2026 |
 | Prometheus | http://localhost:9090 | N/A |
 | Alertmanager | http://localhost:9093 | N/A |
 | Zabbix Web | http://localhost:8081 | Admin / zabbix |
@@ -255,7 +255,7 @@ curl -sfL https://get.k3s.io | sh -
 ### Step 2: Create Environment File
 
 ```bash
-cd /opt/monitoring/umas
+cd /opt/monitoring/panoptes
 cp .env.example .env
 # Edit .env with your actual credentials
 ```
@@ -270,7 +270,7 @@ bash scripts/deploy-k8s.sh
 
 This script will:
 1. Verify `kubectl` is available
-2. Create the `umas` namespace
+2. Create the `panoptes` namespace
 3. Create a Kubernetes Secret from `.env`
 4. Apply all manifests (PVCs, ConfigMaps, Deployments, Services, DaemonSets, Ingress)
 5. Wait for all pods to become ready (timeout: 300s)
@@ -289,27 +289,27 @@ make deploy-k8s
 kubectl apply -f k8s/namespace.yml
 
 # Create secret from .env
-kubectl create secret generic umas-secrets \
+kubectl create secret generic panoptes-secrets \
     --from-env-file=.env \
-    -n umas
+    -n panoptes
 
 # Apply all component manifests
-kubectl apply -f k8s/prometheus/ -n umas
-kubectl apply -f k8s/alertmanager/ -n umas
-kubectl apply -f k8s/grafana/ -n umas
-kubectl apply -f k8s/custom-exporter/ -n umas
-kubectl apply -f k8s/webhook-receiver/ -n umas
-kubectl apply -f k8s/cadvisor/ -n umas
-kubectl apply -f k8s/zabbix/ -n umas
-kubectl apply -f k8s/ingress/ -n umas
+kubectl apply -f k8s/prometheus/ -n panoptes
+kubectl apply -f k8s/alertmanager/ -n panoptes
+kubectl apply -f k8s/grafana/ -n panoptes
+kubectl apply -f k8s/custom-exporter/ -n panoptes
+kubectl apply -f k8s/webhook-receiver/ -n panoptes
+kubectl apply -f k8s/cadvisor/ -n panoptes
+kubectl apply -f k8s/zabbix/ -n panoptes
+kubectl apply -f k8s/ingress/ -n panoptes
 ```
 
 ### Step 4: Verify
 
 ```bash
-kubectl get pods -n umas
-kubectl get svc -n umas
-kubectl get ingress -n umas
+kubectl get pods -n panoptes
+kubectl get svc -n panoptes
+kubectl get ingress -n panoptes
 ```
 
 All pods should show `Running` status with `1/1` ready containers.
@@ -320,10 +320,10 @@ With Ingress configured:
 
 | Service | URL |
 |---|---|
-| Grafana | https://grafana.umas.example.com |
-| Prometheus | https://prometheus.umas.example.com |
-| Alertmanager | https://alertmanager.umas.example.com |
-| Zabbix Web | https://zabbix.umas.example.com |
+| Grafana | https://grafana.panoptes.example.com |
+| Prometheus | https://prometheus.panoptes.example.com |
+| Alertmanager | https://alertmanager.panoptes.example.com |
+| Zabbix Web | https://zabbix.panoptes.example.com |
 
 Without Ingress (NodePort):
 
@@ -347,13 +347,7 @@ The `.env` file controls all sensitive configuration values. Each variable is ex
 | Variable | Default | Description |
 |---|---|---|
 | `GRAFANA_ADMIN_USER` | `admin` | Grafana administrator username |
-| `GRAFANA_ADMIN_PASSWORD` | `umas2026` | Grafana administrator password. **Change this in production.** |
-
-### Slack Notifications
-
-| Variable | Default | Description |
-|---|---|---|
-| `SLACK_WEBHOOK_URL` | `https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK` | Incoming webhook URL for Slack notifications. See [Slack setup](#slack-webhook-setup). |
+| `GRAFANA_ADMIN_PASSWORD` | `panoptes2026` | Grafana administrator password. **Change this in production.** |
 
 ### Telegram Notifications
 
@@ -381,7 +375,7 @@ The `.env` file controls all sensitive configuration values. Each variable is ex
 
 | Variable | Default | Description |
 |---|---|---|
-| `DOMAIN` | `umas.example.com` | Base domain for Ingress routing. Subdomains (grafana, prometheus, alertmanager, zabbix) are configured in the Ingress manifest. |
+| `DOMAIN` | `panoptes.example.com` | Base domain for Ingress routing. Subdomains (grafana, prometheus, alertmanager, zabbix) are configured in the Ingress manifest. |
 
 ---
 
@@ -426,7 +420,7 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
         labels:
-          hostname: 'umas-vps'
+          hostname: 'panoptes-vps'
       - targets: ['192.168.1.10:9100']     # <-- Add new target here
         labels:
           hostname: 'web-server-01'
@@ -460,8 +454,8 @@ curl -X POST http://localhost:9090/-/reload
 
 1. Install the Zabbix Agent on the Windows host:
    - Download from the [Zabbix downloads page](https://www.zabbix.com/download_agents)
-   - Install with the Zabbix Server address pointing to your UMAS server
-   - Configure `Server=<UMAS_IP>` and `ServerActive=<UMAS_IP>` in `zabbix_agentd.conf`
+   - Install with the Zabbix Server address pointing to your PANOPTES server
+   - Configure `Server=<PANOPTES_IP>` and `ServerActive=<PANOPTES_IP>` in `zabbix_agentd.conf`
 
 2. In the Zabbix Web interface (http://localhost:8081):
    - Navigate to Configuration > Hosts > Create Host
@@ -474,21 +468,6 @@ curl -X POST http://localhost:9090/-/reload
 ---
 
 ## Configuring Notification Channels
-
-### Slack Webhook Setup
-
-1. Go to [https://api.slack.com/apps](https://api.slack.com/apps) and click **Create New App** > **From scratch**
-2. Name the app (e.g., "UMAS Alerts") and select your workspace
-3. Navigate to **Incoming Webhooks** > Enable the toggle
-4. Click **Add New Webhook to Workspace**
-5. Select the `#umas-alerts` channel (create it first if needed)
-6. Copy the webhook URL
-7. Repeat for `#umas-critical` channel if using a separate channel for critical alerts
-8. Paste the webhook URL into your `.env` file:
-
-```
-SLACK_WEBHOOK_URL=<your-slack-webhook-url>
-```
 
 ### Telegram Bot Setup
 
@@ -553,10 +532,10 @@ apiVersion: traefik.io/v1alpha1
 kind: TLSStore
 metadata:
   name: default
-  namespace: umas
+  namespace: panoptes
 spec:
   defaultCertificate:
-    secretName: umas-tls
+    secretName: panoptes-tls
 ```
 
 3. Create a certificate resolver (for automatic Let's Encrypt):
@@ -593,13 +572,13 @@ If you have existing certificates:
 
 ```bash
 # Create TLS secret from certificate files
-kubectl create secret tls umas-tls \
+kubectl create secret tls panoptes-tls \
     --cert=fullchain.pem \
     --key=privkey.pem \
-    -n umas
+    -n panoptes
 ```
 
-The Ingress manifest (`k8s/ingress/ingress.yml`) already references `umas-tls` as the TLS secret.
+The Ingress manifest (`k8s/ingress/ingress.yml`) already references `panoptes-tls` as the TLS secret.
 
 ---
 
@@ -743,7 +722,7 @@ docker compose exec prometheus wget -qO- http://<target>:<port>/metrics
 
 ### Alertmanager Not Sending Notifications
 
-**Symptom**: Alerts fire in Prometheus but no Slack/Telegram messages arrive.
+**Symptom**: Alerts fire in Prometheus but no Telegram messages arrive.
 
 ```bash
 # Check Alertmanager logs
@@ -753,10 +732,9 @@ docker compose logs alertmanager
 curl http://localhost:9093/api/v2/alerts
 
 # Common causes:
-# - SLACK_WEBHOOK_URL is not set or is the placeholder value
 # - TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is incorrect
 # - Alertmanager config has syntax errors (check logs for parsing errors)
-# - Network firewall blocking outbound HTTPS to Slack/Telegram APIs
+# - Network firewall blocking outbound HTTPS to Telegram API
 ```
 
 ### Loki Not Receiving Logs
@@ -800,11 +778,11 @@ curl http://localhost:5001/cooldowns
 
 ### K3s Pods Stuck in Pending
 
-**Symptom**: `kubectl get pods -n umas` shows pods in `Pending` state.
+**Symptom**: `kubectl get pods -n panoptes` shows pods in `Pending` state.
 
 ```bash
 # Check pod events
-kubectl describe pod <pod-name> -n umas
+kubectl describe pod <pod-name> -n panoptes
 
 # Common causes:
 # - Insufficient resources (CPU/memory) on the node

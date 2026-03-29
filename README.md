@@ -1,11 +1,11 @@
 ```
- ██╗   ██╗ ███╗   ███╗  █████╗  ███████╗
- ██║   ██║ ████╗ ████║ ██╔══██╗ ██╔════╝
- ██║   ██║ ██╔████╔██║ ███████║ ███████╗
- ██║   ██║ ██║╚██╔╝██║ ██╔══██║ ╚════██║
- ╚██████╔╝ ██║ ╚═╝ ██║ ██║  ██║ ███████║
-  ╚═════╝  ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚══════╝
-  Unified Monitoring & Alerting System
+ ██████╗  █████╗ ███╗   ██╗ ██████╗ ██████╗ ████████╗███████╗███████╗
+ ██╔══██╗██╔══██╗████╗  ██║██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╝
+ ██████╔╝███████║██╔██╗ ██║██║   ██║██████╔╝   ██║   █████╗  ███████╗
+ ██╔═══╝ ██╔══██║██║╚██╗██║██║   ██║██╔═══╝    ██║   ██╔══╝  ╚════██║
+ ██║     ██║  ██║██║ ╚████║╚██████╔╝██║        ██║   ███████╗███████║
+ ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝        ╚═╝   ╚══════╝╚══════╝
+ Unified Monitoring & Alerting System
 ```
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
@@ -19,7 +19,7 @@
 
 ## Overview
 
-**UMAS** (Unified Monitoring & Alerting System) is a comprehensive monitoring and alerting platform designed for university IT infrastructure at **CeDAR -- Center for Data Analytics Research at ADA University**. It integrates Prometheus, Grafana, Loki, Zabbix, and custom-built components into a single, cohesive platform deployed on Kubernetes (K3s). UMAS provides real-time infrastructure observability, intelligent alerting with multi-channel notifications, log aggregation, and automated self-healing remediation -- enabling the CeDAR operations team to maintain high availability and rapidly respond to incidents.
+**PANOPTES** (Unified Monitoring & Alerting System) -- named after the all-seeing giant of Greek mythology -- is a comprehensive monitoring and alerting platform designed for university IT infrastructure at **CeDAR -- Center for Data Analytics Research at ADA University**. It integrates Prometheus, Grafana, Loki, Zabbix, and custom-built components into a single, cohesive platform deployed on Kubernetes (K3s). Panoptes provides real-time infrastructure observability, intelligent alerting with multi-channel notifications, log aggregation, and automated self-healing remediation -- enabling the CeDAR operations team to maintain high availability and rapidly respond to incidents.
 
 ---
 
@@ -97,7 +97,7 @@ flowchart TB
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ada-university/umas.git && cd umas
+git clone https://github.com/ada-university/panoptes.git && cd panoptes
 
 # 2. Create your environment configuration
 cp .env.example .env   # Edit .env with your actual credentials
@@ -106,7 +106,7 @@ cp .env.example .env   # Edit .env with your actual credentials
 make up
 ```
 
-Grafana will be available at [http://localhost:3000](http://localhost:3000) (default credentials: `admin` / `umas2026`).
+Grafana will be available at [http://localhost:3000](http://localhost:3000) (default credentials: `admin` / `panoptes2026`).
 
 ---
 
@@ -118,7 +118,7 @@ Grafana will be available at [http://localhost:3000](http://localhost:3000) (def
 - **Automated self-healing remediation** -- Webhook receiver triggers Ansible playbooks to clean disks, clear memory, restart failed services, and more
 - **Windows Server / Active Directory monitoring** -- Custom exporter with LDAP health checks for domain controllers and AD replication status
 - **Custom metrics collection** -- Python-based exporter for HTTP health checks, TLS certificate expiry, SSH intrusion attempts, and AD health
-- **8 pre-built Grafana dashboards** -- Infrastructure Overview, Node Detail, Docker Containers, Loki Logs, Alertmanager Overview, UMAS Custom Metrics, Active Directory, and System Health
+- **8 pre-built Grafana dashboards** -- Infrastructure Overview, Node Detail, Docker Containers, Loki Logs, Alertmanager Overview, PANOPTES Custom Metrics, Active Directory, and System Health
 - **Kubernetes-ready deployment** -- Full K3s manifests with Ingress, PVCs, ConfigMaps, and TLS termination via Traefik
 
 ---
@@ -149,7 +149,7 @@ Grafana will be available at [http://localhost:3000](http://localhost:3000) (def
 ## Project Structure
 
 ```
-umas/
+panoptes/
 ├── configs/
 │   ├── alertmanager/
 │   │   └── alertmanager.yml            # Alert routing, receivers, inhibit rules
@@ -160,7 +160,7 @@ umas/
 │   │   │   ├── infrastructure-overview.json
 │   │   │   ├── loki-logs.json
 │   │   │   ├── node-detail.json
-│   │   │   └── umas-custom-metrics.json
+│   │   │   └── panoptes-custom-metrics.json
 │   │   └── provisioning/
 │   │       ├── dashboards/dashboards.yml
 │   │       └── datasources/datasources.yml
@@ -198,7 +198,7 @@ umas/
 │   ├── prometheus/                     # Prometheus Deployment, ConfigMap, PVC
 │   ├── webhook-receiver/               # Webhook Receiver Deployment
 │   ├── zabbix/                         # Zabbix Server, Web, PostgreSQL
-│   └── namespace.yml                   # umas namespace definition
+│   └── namespace.yml                   # panoptes namespace definition
 ├── remediation/
 │   ├── ansible/
 │   │   ├── ansible.cfg
@@ -237,7 +237,7 @@ umas/
 
 ## Configuration Guide
 
-UMAS is configured through environment variables and YAML configuration files. For a complete step-by-step guide, see **[docs/setup-guide.md](docs/setup-guide.md)**.
+PANOPTES is configured through environment variables and YAML configuration files. For a complete step-by-step guide, see **[docs/setup-guide.md](docs/setup-guide.md)**.
 
 ### Quick Configuration
 
@@ -275,7 +275,7 @@ For detailed configuration of each component, notification channels, and adding 
 | Docker Containers | ![Docker Containers](docs/screenshots/docker-containers.png) |
 | Loki Log Explorer | ![Loki Logs](docs/screenshots/loki-logs.png) |
 | Alertmanager Overview | ![Alertmanager](docs/screenshots/alertmanager-overview.png) |
-| UMAS Custom Metrics | ![Custom Metrics](docs/screenshots/umas-custom-metrics.png) |
+| PANOPTES Custom Metrics | ![Custom Metrics](docs/screenshots/panoptes-custom-metrics.png) |
 | Active Directory | ![Active Directory](docs/screenshots/active-directory.png) |
 | System Health | ![System Health](docs/screenshots/system-health.png) |
 
@@ -283,7 +283,7 @@ For detailed configuration of each component, notification channels, and adding 
 
 ## Alert Rules
 
-UMAS ships with **26 pre-configured alert rules** organized into four groups:
+PANOPTES ships with **26 pre-configured alert rules** organized into four groups:
 
 - **Host Alerts** (15 rules) -- InstanceDown, CPU, memory, disk, swap, load, network, file descriptors, systemd, clock skew, OOM kills
 - **Container Alerts** (4 rules) -- Container CPU, memory, restart loops, OOM kills
@@ -298,7 +298,7 @@ For operational runbooks describing investigation and resolution steps for each 
 
 ## Auto-Remediation
 
-UMAS includes an automated self-healing pipeline that responds to specific alerts without human intervention.
+PANOPTES includes an automated self-healing pipeline that responds to specific alerts without human intervention.
 
 ### How It Works
 
@@ -342,7 +342,7 @@ The webhook receiver exposes the following API endpoints:
 
 ## Contributing
 
-We welcome contributions to UMAS. To contribute:
+We welcome contributions to PANOPTES. To contribute:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/your-feature`)
@@ -387,5 +387,5 @@ Built for the **CeDAR -- Center for Data Analytics Research** infrastructure tea
 ---
 
 <p align="center">
-  <sub>UMAS -- Unified Monitoring & Alerting System | ADA University | 2026</sub>
+  <sub>PANOPTES -- Unified Monitoring & Alerting System | ADA University | 2026</sub>
 </p>

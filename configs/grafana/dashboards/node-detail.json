@@ -18,7 +18,7 @@
   "uid": "node-detail",
   "title": "Node Detail",
   "description": "Deep dive into a single node's metrics",
-  "tags": ["node", "detail", "umas"],
+  "tags": ["node", "detail", "panoptes"],
   "style": "dark",
   "timezone": "browser",
   "editable": true,

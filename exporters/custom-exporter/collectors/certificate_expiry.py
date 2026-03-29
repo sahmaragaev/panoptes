@@ -5,15 +5,15 @@ from datetime import datetime, timezone
 
 from prometheus_client import Gauge
 
-logger = logging.getLogger("umas-exporter.certificate_expiry")
+logger = logging.getLogger("panoptes-exporter.certificate_expiry")
 
 CERT_EXPIRY_DAYS = Gauge(
-    "umas_cert_expiry_days",
+    "panoptes_cert_expiry_days",
     "Days until the TLS certificate expires",
     ["host", "port"],
 )
 CERT_VALID = Gauge(
-    "umas_cert_valid",
+    "panoptes_cert_valid",
     "Whether the TLS certificate is valid",
     ["host", "port"],
 )
