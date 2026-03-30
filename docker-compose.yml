@@ -204,6 +204,26 @@ services:
     networks:
       - monitoring
 
+  tenant-notifier:
+    build: ./remediation/tenant-notifier
+    container_name: tenant-notifier
+    environment:
+      - KEYS_FILE=/etc/nginx/api-keys.yml
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    volumes:
+      - ./configs/nginx/api-keys.yml:/etc/nginx/api-keys.yml:ro
+    depends_on:
+      - alertmanager
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:5002/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - monitoring
+
   snmp-exporter:
     image: prom/snmp-exporter:v0.28.0
     volumes:

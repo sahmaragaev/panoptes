@@ -19,11 +19,11 @@ data:
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
-      receiver: telegram-warnings
+      receiver: tenant-notifier
       routes:
         - match:
             severity: critical
-          receiver: telegram-critical
+          receiver: tenant-notifier
           repeat_interval: 1h
         - match_re:
             remediation: '.+'
@@ -32,15 +32,9 @@ data:
           continue: true
 
     receivers:
-      - name: telegram-warnings
-        telegram_configs:
-          - bot_token: '${TELEGRAM_BOT_TOKEN}'
-            chat_id: '${TELEGRAM_CHAT_ID}'
-            send_resolved: true
-      - name: telegram-critical
-        telegram_configs:
-          - bot_token: '${TELEGRAM_BOT_TOKEN}'
-            chat_id: '${TELEGRAM_CHAT_ID}'
+      - name: tenant-notifier
+        webhook_configs:
+          - url: 'http://tenant-notifier:5002/webhook'
             send_resolved: true
       - name: webhook-remediation
         webhook_configs:
