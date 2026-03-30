@@ -19,7 +19,7 @@
 
 ## Overview
 
-**PANOPTES** (Unified Monitoring & Alerting System) -- named after the all-seeing giant of Greek mythology -- is a comprehensive monitoring and alerting platform designed for university IT infrastructure at **CeDAR -- Center for Data Analytics Research at ADA University**. It integrates Prometheus, Grafana, Loki, Zabbix, and custom-built components into a single, cohesive platform deployed on Kubernetes (K3s). Panoptes provides real-time infrastructure observability, intelligent alerting with multi-channel notifications, log aggregation, and automated self-healing remediation -- enabling the CeDAR operations team to maintain high availability and rapidly respond to incidents.
+**PANOPTES** (Unified Monitoring & Alerting System) -- named after the all-seeing giant of Greek mythology -- is a comprehensive monitoring and alerting platform designed for university IT infrastructure at **CeDAR -- Center for Data Analytics Research at ADA University**. It integrates Prometheus, Grafana, Loki, snmp_exporter, and custom-built components into a single, cohesive platform deployed on Kubernetes (K3s). Panoptes provides real-time infrastructure observability, intelligent alerting with multi-channel notifications, log aggregation, SNMP network device monitoring, and automated self-healing remediation -- enabling the CeDAR operations team to maintain high availability and rapidly respond to incidents. A built-in SaaS mode with Grafana Alloy remote agents allows monitoring of distributed hosts behind NAT or firewalls.
 
 ---
 
@@ -31,6 +31,8 @@ flowchart TB
         Linux["Linux Servers"]
         Windows["Windows / Active Directory"]
         Docker["Docker Containers"]
+        NetDev["Network Devices\n(SNMP)"]
+        Remote["Remote Hosts\n(behind NAT)"]
     end
 
     subgraph Collectors["Data Collection"]
@@ -38,16 +40,15 @@ flowchart TB
         CE["Custom Exporter\n:9101"]
         CA["cAdvisor\n:8080"]
         PT["Promtail"]
-        ZA["Zabbix Agent"]
+        SE["snmp_exporter\n:9116"]
+        AL["Grafana Alloy\n(remote agent)"]
     end
 
     subgraph Core["Core Platform"]
         PR["Prometheus\n:9090"]
         LK["Loki\n:3100"]
         AM["Alertmanager\n:9093"]
-        ZS["Zabbix Server\n:10051"]
-        ZW["Zabbix Web\n:8081"]
-        ZP["PostgreSQL\n(Zabbix DB)"]
+        NG["nginx Gateway\n:8080"]
     end
 
     subgraph Visualization["Visualization & Notification"]
@@ -63,24 +64,26 @@ flowchart TB
 
     Linux --> NE
     Linux --> PT
-    Windows --> ZA
     Windows --> CE
     Docker --> CA
     Docker --> PT
+    NetDev --> SE
+
+    Remote --> AL
+    AL -->|"push metrics"| NG
+    AL -->|"push logs"| NG
+    NG --> PR
+    NG --> LK
 
     NE --> PR
     CE --> PR
     CA --> PR
+    SE --> PR
     PT --> LK
-    ZA --> ZS
-
-    ZS --> ZP
-    ZS --> ZW
 
     PR --> AM
     PR --> GR
     LK --> GR
-    ZW --> GR
 
     AM --> TG
     AM --> EM
@@ -110,6 +113,39 @@ Grafana will be available at [http://localhost:3000](http://localhost:3000) (def
 
 ---
 
+## Deployment Profiles
+
+PANOPTES uses Docker Compose profiles to let you choose the footprint that fits your needs.
+
+| Profile | RAM Footprint | Command |
+|---|---|---|
+| **Core** (default) | ~700 MB | `docker compose up -d` |
+| **With Logging** | ~1.1 GB | `docker compose --profile logging up -d` |
+| **Full** | ~1.2 GB | `docker compose --profile full up -d` |
+| **SaaS mode** | ~1.2 GB | `docker compose --profile logging --profile saas up -d` |
+
+- **Core** starts Prometheus, Grafana, Alertmanager, Node Exporter, cAdvisor, Custom Exporter, and Webhook Receiver.
+- **With Logging** adds Loki and Promtail for centralized log aggregation.
+- **Full** adds snmp_exporter for SNMP network device monitoring on top of the logging stack.
+- **SaaS mode** adds the nginx gateway so that remote Grafana Alloy agents can push metrics and logs into the platform.
+
+---
+
+## Connect a Remote Host
+
+Install the Grafana Alloy agent on any remote Linux host to push metrics and logs back to PANOPTES:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ada-university/panoptes/main/agent/install.sh | bash -s -- \
+  --server https://panoptes.example.com:8080 \
+  --key pnpt_myhost_xxxxxxxxxxxx \
+  --tenant myhost
+```
+
+The script installs Grafana Alloy, configures it to push to the nginx gateway using the provided API key, and starts the agent as a systemd service. Generate API keys on the server with `scripts/generate-api-key.sh`.
+
+---
+
 ## Features
 
 - **Real-time infrastructure monitoring** -- CPU, memory, disk, network, and system load tracked at 15-second intervals via Prometheus and Node Exporter
@@ -134,9 +170,9 @@ Grafana will be available at [http://localhost:3000](http://localhost:3000) (def
 | Alert Routing | Alertmanager | v0.28.1 | Alert deduplication, grouping, and routing |
 | Host Metrics | Node Exporter | v1.9.0 | Hardware and OS metrics for Linux hosts |
 | Container Metrics | cAdvisor | v0.51.0 | Resource usage and performance metrics for containers |
-| Network Monitoring | Zabbix Server | 7.4 (Alpine) | Agent-based monitoring for Windows/AD |
-| Zabbix Frontend | Zabbix Web (Nginx) | 7.4 (Alpine) | Web interface for Zabbix |
-| Zabbix Database | PostgreSQL | 16 | Backend database for Zabbix |
+| SNMP Monitoring | snmp_exporter | v0.28.0 | SNMP device monitoring |
+| Remote Agent | Grafana Alloy | v1.5.1 | Remote agent for SaaS mode |
+| API Gateway | nginx / OpenResty | 1.27 | API gateway with per-tenant auth |
 | Custom Exporter | Python (prometheus_client) | Custom | HTTP health, cert expiry, AD health, SSH metrics |
 | Webhook Receiver | Python (FastAPI) | Custom | Receives alerts and triggers Ansible remediation |
 | Remediation | Ansible | Latest | Automated playbooks for self-healing actions |
@@ -166,11 +202,13 @@ panoptes/
 │   │       └── datasources/datasources.yml
 │   ├── loki/
 │   │   └── loki-config.yaml            # Loki storage, schema, retention
+│   ├── nginx/                           # nginx gateway configuration
 │   ├── prometheus/
 │   │   ├── alert_rules.yml             # 26 alert rules across 4 groups
 │   │   └── prometheus.yml              # Scrape configs, global settings
-│   └── promtail/
-│       └── promtail-config.yaml        # Log scrape targets and pipelines
+│   ├── promtail/
+│   │   └── promtail-config.yaml        # Log scrape targets and pipelines
+│   └── snmp/                            # snmp_exporter SNMP module configs
 ├── docs/
 │   ├── architecture.md                 # System architecture deep-dive
 │   ├── setup-guide.md                  # Complete deployment guide
@@ -189,15 +227,17 @@ panoptes/
 │       ├── Dockerfile
 │       ├── exporter.py                 # Main exporter entry point
 │       └── requirements.txt
+├── agent/                                # Grafana Alloy remote agent installer
 ├── k8s/
 │   ├── alertmanager/                   # Alertmanager K8s manifests
 │   ├── cadvisor/                       # cAdvisor DaemonSet
 │   ├── custom-exporter/                # Custom Exporter Deployment
 │   ├── grafana/                        # Grafana Deployment, PVC, Ingress
 │   ├── ingress/                        # Traefik Ingress rules
+│   ├── nginx/                          # nginx gateway Deployment
 │   ├── prometheus/                     # Prometheus Deployment, ConfigMap, PVC
+│   ├── snmp-exporter/                  # snmp_exporter Deployment
 │   ├── webhook-receiver/               # Webhook Receiver Deployment
-│   ├── zabbix/                         # Zabbix Server, Web, PostgreSQL
 │   └── namespace.yml                   # panoptes namespace definition
 ├── remediation/
 │   ├── ansible/
@@ -257,7 +297,6 @@ cp .env.example .env
 | `TELEGRAM_CHAT_ID` | Telegram chat/group ID for notifications |
 | `SMTP_HOST` / `SMTP_PORT` | SMTP server for email alerts |
 | `SMTP_USER` / `SMTP_PASSWORD` | SMTP authentication credentials |
-| `ZABBIX_DB_PASSWORD` | PostgreSQL password for Zabbix |
 | `DOMAIN` | Base domain for Ingress routing |
 
 For detailed configuration of each component, notification channels, and adding new monitoring targets, refer to the [Setup Guide](docs/setup-guide.md).

@@ -39,7 +39,7 @@ spec:
                   name: grafana-secret
                   key: admin-password
             - name: GF_INSTALL_PLUGINS
-              value: "alexanderzobnin-zabbix-app"
+              value: "grafana-clock-panel,grafana-piechart-panel"
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
           resources:

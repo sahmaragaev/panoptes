@@ -1585,7 +1585,6 @@ curl http://localhost:5001/cooldowns | python3 -m json.tool
 | Promtail | `docker compose logs promtail` | Log collection, target discovery |
 | Custom Exporter | `docker compose logs custom-exporter` | Collector errors, scrape failures |
 | Webhook Receiver | `docker compose logs webhook-receiver` | Remediation execution, playbook output |
-| Zabbix Server | `docker compose logs zabbix-server` | Agent communication, trigger evaluation |
 
 ### On Monitored Hosts
 

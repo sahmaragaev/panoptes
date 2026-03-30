@@ -19,7 +19,8 @@ Step-by-step presentation guide for demonstrating the Unified Monitoring & Alert
    - [Step 6: Show Auto-Remediation](#step-6-show-auto-remediation)
    - [Step 7: Loki Log Explorer](#step-7-loki-log-explorer)
    - [Step 8: Active Directory Dashboard](#step-8-active-directory-dashboard)
-   - [Step 9: System Health Dashboard](#step-9-system-health-dashboard)
+   - [Step 9: Connect a Remote Agent (SaaS Mode)](#step-9-connect-a-remote-agent-saas-mode)
+   - [Step 10: System Health Dashboard](#step-10-system-health-dashboard)
 4. [Cleanup Commands](#cleanup-commands)
 5. [Backup Plan](#backup-plan)
 6. [Q&A Preparation](#qa-preparation)
@@ -32,7 +33,7 @@ Complete these steps **at least 30 minutes before** the demo begins.
 
 ### Environment Verification
 
-- [ ] All containers are running: `docker compose ps` (12 services should show `Up`)
+- [ ] All containers are running: `docker compose ps` (all services for your chosen profile should show `Up`)
 - [ ] Prometheus targets are all UP: Open http://localhost:9090/targets
 - [ ] Grafana is accessible: Open http://localhost:3000 and log in (admin / panoptes2026)
 - [ ] Alertmanager is accessible: Open http://localhost:9093
@@ -81,7 +82,7 @@ Show the architecture diagram (from `docs/architecture.md` or a prepared slide) 
 
 1. **Data Collection Layer**: "We use Node Exporter for host metrics, cAdvisor for container metrics, Promtail for log shipping, and our custom Python exporter for application-level checks like HTTP health, certificate expiry, and Active Directory monitoring."
 
-2. **Storage Layer**: "Prometheus stores time-series metrics with a 15-second scrape interval and 15-day retention. Loki stores logs with label-based indexing, which is far more efficient than full-text indexing. Zabbix with PostgreSQL handles Windows and Active Directory monitoring."
+2. **Storage Layer**: "Prometheus stores time-series metrics with a 15-second scrape interval and 15-day retention. Loki stores logs with label-based indexing, which is far more efficient than full-text indexing."
 
 3. **Alerting Layer**: "Prometheus evaluates 26 alert rules every 15 seconds. When an alert fires, Alertmanager routes it based on severity -- warnings and critical alerts go to Telegram. Alerts with a remediation label are also sent to our webhook receiver."
 
@@ -378,7 +379,41 @@ rm /tmp/panoptes_disk_test
 
 ---
 
-### Step 9: System Health Dashboard
+### Step 9: Connect a Remote Agent (SaaS Mode)
+
+**Duration**: 3-4 minutes
+
+**Action**: Demonstrate connecting a remote host using the Grafana Alloy agent.
+
+#### What to Show
+
+1. **Generate an API key on the server:**
+   ```bash
+   bash scripts/generate-api-key.sh --tenant demo-host
+   ```
+
+2. **Install the agent on a remote host** (or a second terminal simulating a remote host):
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/ada-university/panoptes/main/agent/install.sh | bash -s -- \
+     --server https://panoptes.example.com:8080 \
+     --key pnpt_demo-host_xxxxxxxxxxxx \
+     --tenant demo-host
+   ```
+
+3. **Show the remote host appearing in Prometheus targets** within 30 seconds
+4. **Show the remote host's metrics in Grafana** with the tenant label
+
+#### Talking Points
+
+> "This is our SaaS mode. With a single command, we can onboard a remote host -- even one behind NAT or a firewall. The Grafana Alloy agent pushes metrics and logs to our nginx gateway, which authenticates the request using a per-tenant API key."
+
+> "The key thing here is that we do not need inbound connectivity to the remote host. The agent initiates the connection outbound, which works through firewalls and NAT. This is how we can monitor branch offices, customer servers, or cloud VMs from a single central dashboard."
+
+> "Each tenant gets a unique API key, and all their metrics are tagged with a tenant label. This means we can filter dashboards by tenant and enforce access control in Grafana."
+
+---
+
+### Step 10: System Health Dashboard
 
 **Duration**: 2 minutes
 
@@ -489,9 +524,9 @@ docker compose down -v && docker compose up -d
 
 > "Prometheus is open-source and self-hosted, which means no vendor lock-in and no per-host licensing costs. For a university infrastructure, this is significant. It is also the de facto standard for cloud-native monitoring, with native Kubernetes integration and a massive ecosystem of exporters. The pull-based model simplifies firewall configuration -- we do not need to open inbound ports on monitored hosts."
 
-**Q: Why both Prometheus and Zabbix? Is that not redundant?**
+**Q: How does SaaS mode work for remote hosts?**
 
-> "They serve different niches. Prometheus excels at Linux/container metrics with its pull-based model and powerful PromQL query language. Zabbix excels at Windows and Active Directory monitoring with its mature agent support and built-in templates. Rather than force one tool to cover everything poorly, we use each tool for what it does best, and Grafana unifies them in a single dashboard."
+> "PANOPTES includes a SaaS mode where remote hosts run a lightweight Grafana Alloy agent that pushes metrics and logs to our central server through an nginx gateway. Each tenant gets a unique API key for authentication. This means we can monitor hosts behind NAT or firewalls without requiring inbound connectivity. During the demo, I can show you how to connect a remote host in under a minute."
 
 **Q: How does this scale to hundreds of hosts?**
 

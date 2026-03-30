@@ -60,11 +60,6 @@ data:
           - targets:
               - custom-exporter:9091
 
-      - job_name: zabbix-server
-        static_configs:
-          - targets:
-              - zabbix-server:10051
-
   alert_rules.yml: |
     groups:
       - name: instance_alerts

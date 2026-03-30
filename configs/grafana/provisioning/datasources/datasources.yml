@@ -16,12 +16,3 @@ datasources:
     type: alertmanager
     access: proxy
     url: http://alertmanager:9093
-
-  - name: Zabbix
-    type: alexanderzobnin-zabbix-datasource
-    access: proxy
-    url: http://zabbix-web:8081/api_jsonrpc.php
-    jsonData:
-      username: Admin
-    secureJsonData:
-      password: zabbix

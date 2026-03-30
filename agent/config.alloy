@@ -1,0 +1,41 @@
+prometheus.scrape "node" {
+  targets = [{"__address__" = "localhost:9100"}]
+  forward_to = [prometheus.remote_write.central.receiver]
+  scrape_interval = "15s"
+}
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = env("PANOPTES_SERVER_URL") + "/api/v1/write"
+    headers = {
+      "X-API-Key" = env("PANOPTES_API_KEY"),
+    }
+  }
+  external_labels = {
+    tenant = env("PANOPTES_TENANT"),
+    hostname = env("HOSTNAME"),
+  }
+}
+
+local.file_match "logs" {
+  path_targets = [{"__path__" = "/var/log/*.log"}]
+}
+
+loki.source.file "logs" {
+  targets = local.file_match.logs.targets
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.write "central" {
+  endpoint {
+    url = env("PANOPTES_SERVER_URL") + "/loki/api/v1/push"
+    headers = {
+      "X-API-Key" = env("PANOPTES_API_KEY"),
+    }
+    tenant_id = env("PANOPTES_TENANT")
+  }
+  external_labels = {
+    tenant = env("PANOPTES_TENANT"),
+    hostname = env("HOSTNAME"),
+  }
+}

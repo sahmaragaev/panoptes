@@ -1,7 +1,16 @@
-.PHONY: up down restart logs status deploy-k8s test lint clean demo validate-alerts build-exporters validate
+.PHONY: up up-logging up-full up-saas down restart logs status deploy-k8s test lint clean demo validate-alerts build-exporters validate
 
 up:
 	docker compose up -d
+
+up-logging:
+	docker compose --profile logging up -d
+
+up-full:
+	docker compose --profile full up -d
+
+up-saas:
+	docker compose --profile logging --profile saas up -d
 
 down:
 	docker compose down

@@ -13,8 +13,9 @@ This document describes the architecture of the Unified Monitoring & Alerting Sy
 5. [Network Topology](#network-topology)
 6. [Security Model](#security-model)
 7. [Scaling Strategy](#scaling-strategy)
-8. [Storage and Retention](#storage-and-retention)
-9. [High Availability Considerations](#high-availability-considerations)
+8. [SaaS Mode Architecture](#saas-mode-architecture)
+9. [Storage and Retention](#storage-and-retention)
+10. [High Availability Considerations](#high-availability-considerations)
 
 ---
 
@@ -22,12 +23,12 @@ This document describes the architecture of the Unified Monitoring & Alerting Sy
 
 PANOPTES is a multi-layered monitoring platform composed of four functional tiers:
 
-1. **Data Collection Tier** -- Agents and exporters running on monitored hosts that collect metrics and logs
-2. **Storage and Processing Tier** -- Prometheus for time-series metrics, Loki for logs, PostgreSQL for Zabbix state
+1. **Data Collection Tier** -- Agents and exporters running on monitored hosts that collect metrics and logs (Node Exporter, cAdvisor, snmp_exporter, Custom Exporter, Promtail, Grafana Alloy)
+2. **Storage and Processing Tier** -- Prometheus for time-series metrics, Loki for logs
 3. **Alerting and Remediation Tier** -- Alertmanager for routing and deduplication, webhook receiver for automated response
-4. **Visualization Tier** -- Grafana for dashboards, Zabbix Web for agent-based monitoring
+4. **Visualization Tier** -- Grafana for dashboards and unified data exploration
 
-Each tier is independently deployable and horizontally scalable. The platform supports both Docker Compose (development/single-server) and Kubernetes/K3s (production) deployment models.
+Each tier is independently deployable and horizontally scalable. The platform supports both Docker Compose (development/single-server) and Kubernetes/K3s (production) deployment models. A SaaS mode enables remote hosts to push metrics and logs through an nginx gateway authenticated with per-tenant API keys.
 
 ---
 
@@ -39,7 +40,8 @@ flowchart TB
         LS["Linux Servers"]
         WS["Windows Servers\n& Active Directory"]
         DC["Docker Hosts"]
-        NET["Network Devices"]
+        NET["Network Devices\n(SNMP)"]
+        RH["Remote Hosts\n(behind NAT)"]
     end
 
     subgraph Collection["Collection Tier"]
@@ -47,13 +49,17 @@ flowchart TB
         CE["Custom Exporter\nPython\nPort 9101"]
         CA["cAdvisor\nv0.51.0\nPort 8080"]
         PT["Promtail\nv3.4.2\nPort 9080"]
-        ZAG["Zabbix Agent"]
+        SE["snmp_exporter\nv0.28.0\nPort 9116"]
+        AL["Grafana Alloy\nv1.5.1\n(remote agent)"]
     end
 
     subgraph Storage["Storage & Processing Tier"]
         PR["Prometheus\nv3.2.1\nPort 9090\n15d retention"]
         LK["Loki\nv3.4.2\nPort 3100\n15d retention"]
-        PG["PostgreSQL 16\nZabbix Backend"]
+    end
+
+    subgraph Gateway["SaaS Gateway"]
+        NG["nginx Gateway\nOpenResty 1.27\nPort 8080"]
     end
 
     subgraph Alerting["Alerting & Remediation Tier"]
@@ -64,7 +70,6 @@ flowchart TB
 
     subgraph Viz["Visualization Tier"]
         GR["Grafana\nv11.5.2\nPort 3000"]
-        ZW["Zabbix Web\nNginx\nPort 8081"]
     end
 
     subgraph Notify["Notification Channels"]
@@ -74,23 +79,26 @@ flowchart TB
 
     LS --> NE
     LS --> PT
-    WS --> ZAG
     WS --> CE
     DC --> CA
     DC --> PT
+    NET --> SE
+
+    RH --> AL
+    AL -->|"push metrics"| NG
+    AL -->|"push logs"| NG
+    NG --> PR
+    NG --> LK
 
     NE --> PR
     CE --> PR
     CA --> PR
+    SE --> PR
     PT --> LK
-    ZAG --> ZS["Zabbix Server\nv7.4\nPort 10051"]
-    ZS --> PG
 
     PR -->|"evaluate rules"| AM
     PR -->|"PromQL queries"| GR
     LK -->|"LogQL queries"| GR
-    ZS --> ZW
-    ZW -->|"Zabbix plugin"| GR
 
     AM -->|"warning"| TG
     AM -->|"critical"| TG
@@ -106,6 +114,7 @@ flowchart TB
     style LK fill:#2C3E50,color:#fff
     style AM fill:#E6522C,color:#fff
     style WH fill:#27AE60,color:#fff
+    style NG fill:#009639,color:#fff
 ```
 
 ---
@@ -125,9 +134,9 @@ flowchart TB
 
 - **Image**: `grafana/grafana:11.5.2`
 - **Port**: 3000
-- **Purpose**: Unified dashboard platform. Connects to Prometheus (metrics), Loki (logs), and Zabbix (agent-based data) as data sources. Ships with 8 pre-provisioned dashboards.
-- **Why chosen**: Supports multiple data sources in a single pane of glass. Rich visualization library. Dashboard-as-code via provisioning. Extensive plugin ecosystem (Zabbix plugin for AD monitoring).
-- **Plugins**: `alexanderzobnin-zabbix-app`, `grafana-clock-panel`, `grafana-piechart-panel`
+- **Purpose**: Unified dashboard platform. Connects to Prometheus (metrics) and Loki (logs) as data sources. Ships with 8 pre-provisioned dashboards.
+- **Why chosen**: Supports multiple data sources in a single pane of glass. Rich visualization library. Dashboard-as-code via provisioning. Extensive plugin ecosystem.
+- **Plugins**: `grafana-clock-panel`, `grafana-piechart-panel`
 - **Configuration**: `configs/grafana/provisioning/`
 
 ### Loki (Log Aggregation)
@@ -169,12 +178,28 @@ flowchart TB
 - **Purpose**: Collects resource usage and performance characteristics of running Docker containers (CPU, memory, network I/O, filesystem).
 - **Why chosen**: Google-maintained, provides per-container metrics that Node Exporter cannot (it sees the host aggregate). Required for container-level alerting.
 
-### Zabbix Server + Web + PostgreSQL (Agent-Based Monitoring)
+### snmp_exporter (SNMP Network Device Monitoring)
 
-- **Images**: `zabbix/zabbix-server-pgsql:alpine-7.4-latest`, `zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest`, `postgres:16`
-- **Ports**: 10051 (server), 8081 (web)
-- **Purpose**: Agent-based monitoring for Windows servers and Active Directory. Zabbix agents on Windows hosts report to the Zabbix server, which stores data in PostgreSQL. Grafana connects to Zabbix via the Zabbix plugin.
-- **Why chosen**: Zabbix has mature Windows agent support, native Active Directory monitoring templates, and SNMP support for network devices -- capabilities that Prometheus exporters lack for the Windows/AD ecosystem.
+- **Image**: `prom/snmp-exporter:v0.28.0`
+- **Port**: 9116
+- **Purpose**: Lightweight Go binary that translates SNMP OID walks into Prometheus metrics. Replaces traditional SNMP polling tools for network device monitoring (switches, routers, UPS, printers).
+- **Why chosen**: Native Prometheus integration. Configuration-driven via snmp.yml modules. No external database required. Supports SNMP v1, v2c, and v3.
+- **Configuration**: `configs/snmp/snmp.yml`
+
+### Grafana Alloy (Remote Agent -- SaaS Mode)
+
+- **Image**: `grafana/alloy:v1.5.1`
+- **Port**: N/A (runs on remote hosts)
+- **Purpose**: Lightweight agent installed on remote hosts that pushes metrics (via Prometheus remote-write) and logs (via Loki push API) to the central PANOPTES server through the nginx gateway. Enables monitoring of hosts behind NAT or firewalls without requiring inbound connectivity.
+- **Why chosen**: Official Grafana agent with native Prometheus and Loki support. Supports remote-write for push-based metric delivery. Single binary, low resource footprint.
+
+### nginx Gateway (API Gateway -- SaaS Mode)
+
+- **Image**: `openresty/openresty:1.27-alpine`
+- **Port**: 8080
+- **Purpose**: Reverse proxy that authenticates incoming remote-write and log-push requests from Grafana Alloy agents using per-tenant API keys. Routes authenticated traffic to Prometheus and Loki.
+- **Why chosen**: OpenResty extends nginx with Lua scripting for lightweight API key validation without an external auth service. Minimal resource overhead.
+- **Configuration**: `configs/nginx/`
 
 ### Custom Exporter (Application-Level Metrics)
 
@@ -199,7 +224,7 @@ flowchart TB
 
 ## Data Flow
 
-### Metrics Collection Flow
+### Metrics Collection Flow (Pull -- Local Hosts)
 
 ```
 Linux Host
@@ -219,6 +244,28 @@ Alertmanager (receives firing/resolved alerts)
     |     Ansible Playbook (executes on target host via SSH)
     v
 Grafana (queries Prometheus via PromQL, renders dashboards)
+```
+
+### Metrics and Logs Push Flow (Push -- Remote Hosts / SaaS Mode)
+
+```
+Remote Host (behind NAT/firewall)
+    |
+    | (Grafana Alloy collects metrics + logs locally)
+    v
+Grafana Alloy agent
+    |
+    | (remote_write for metrics, Loki push API for logs)
+    | (HTTPS with per-tenant API key in Authorization header)
+    v
+nginx Gateway (:8080)
+    |
+    | (validates API key, extracts tenant label)
+    |
+    |--> Prometheus (receives remote-write, stores in TSDB)
+    |--> Loki (receives log-push, indexes and stores)
+    v
+Grafana (queries both sources, tenant label enables filtering)
 ```
 
 ### Log Collection Flow
@@ -278,14 +325,13 @@ Docker Network: monitoring (bridge)
 ├── promtail           :9080
 ├── grafana            :3000
 ├── cadvisor           :8080
-├── zabbix-server      :10051
-├── zabbix-web         :8081 (mapped from internal 8080)
-├── zabbix-postgres    :5432
+├── snmp-exporter      :9116
+├── nginx-gateway      :8080 (SaaS mode)
 ├── custom-exporter    :9101
 └── webhook-receiver   :5001
 ```
 
-All ports are published to the host for development access. In production, only Grafana (3000), Prometheus (9090), Alertmanager (9093), and Zabbix Web (8081) should be exposed externally.
+All ports are published to the host for development access. In production, only Grafana (3000), Prometheus (9090), Alertmanager (9093), and the nginx gateway (8080, SaaS mode) should be exposed externally.
 
 ### Kubernetes (K3s) Deployment
 
@@ -299,21 +345,18 @@ Namespace: panoptes
 │   ├── grafana           (ClusterIP :3000)
 │   ├── custom-exporter   (ClusterIP :9101)
 │   ├── webhook-receiver  (ClusterIP :5001)
-│   ├── zabbix-server     (ClusterIP :10051)
-│   ├── zabbix-web        (ClusterIP :8080)
-│   └── zabbix-postgres   (ClusterIP :5432)
+│   ├── snmp-exporter     (ClusterIP :9116)
+│   └── nginx-gateway     (ClusterIP :8080)
 ├── DaemonSets:
 │   └── cadvisor          (one pod per node)
 ├── PVCs:
 │   ├── prometheus-data   (10Gi)
 │   ├── grafana-data      (5Gi)
-│   ├── alertmanager-data (2Gi)
-│   └── zabbix-db-data    (10Gi)
+│   └── alertmanager-data (2Gi)
 ├── Ingress (Traefik):
 │   ├── grafana.panoptes.example.com     -> grafana:3000
 │   ├── prometheus.panoptes.example.com  -> prometheus:9090
-│   ├── alertmanager.panoptes.example.com -> alertmanager:9093
-│   └── zabbix.panoptes.example.com     -> zabbix-web:8080
+│   └── alertmanager.panoptes.example.com -> alertmanager:9093
 └── Secret:
     └── panoptes-secrets (from .env)
 ```
@@ -332,9 +375,8 @@ External traffic enters through K3s's built-in Traefik Ingress controller with T
 | cAdvisor | 8080 | 8080 | DaemonSet |
 | Custom Exporter | 9101 | 9101 | ClusterIP |
 | Webhook Receiver | 5001 | 5001 | ClusterIP |
-| Zabbix Server | 10051 | 10051 | ClusterIP |
-| Zabbix Web | 8080 | 8081 | ClusterIP |
-| PostgreSQL | 5432 | N/A | ClusterIP |
+| snmp_exporter | 9116 | 9116 | ClusterIP |
+| nginx Gateway | 8080 | 8080 | ClusterIP |
 
 ---
 
@@ -345,7 +387,7 @@ External traffic enters through K3s's built-in Traefik Ingress controller with T
 - **Memory limits**: Every container has a `mem_limit` set to prevent resource exhaustion (128 MB to 512 MB depending on the component)
 - **Read-only mounts**: Configuration files are mounted as `:ro` (read-only) where possible
 - **Non-root execution**: Prometheus, Grafana, Loki, and Alertmanager run as non-root users by default in their official images
-- **Minimal images**: Alpine-based images are used for Zabbix components to reduce attack surface
+- **Minimal images**: Alpine-based images are used where available to reduce attack surface
 - **No privileged mode**: Only cAdvisor requires `privileged: true` (necessary for full container metrics access)
 
 ### Network Security
@@ -364,7 +406,7 @@ External traffic enters through K3s's built-in Traefik Ingress controller with T
 ### Access Control
 
 - **Grafana**: Sign-up is disabled (`GF_USERS_ALLOW_SIGN_UP=false`). Admin credentials are set via environment variables
-- **Zabbix**: Default admin password should be changed on first login
+- **nginx Gateway**: Per-tenant API key authentication for all remote-write and log-push requests. Keys are generated with `scripts/generate-api-key.sh` and stored in the gateway configuration
 - **Prometheus**: Admin API and lifecycle API are enabled for operational use but should be firewalled in production
 - **Alertmanager**: No built-in authentication; access should be restricted via network policies or reverse proxy
 
@@ -383,7 +425,7 @@ External traffic enters through K3s's built-in Traefik Ingress controller with T
 
 - **Prometheus**: Scale vertically by increasing `mem_limit` and storage volume size. For very large deployments, consider Thanos or Cortex for long-term storage and horizontal query scaling.
 - **Loki**: Scale vertically by increasing memory and disk. For high-volume log environments, Loki supports a microservices deployment mode with separate ingester, distributor, and querier components.
-- **PostgreSQL (Zabbix)**: Scale vertically with more CPU and memory. For HA, use PostgreSQL replication.
+- **nginx Gateway**: Stateless; can be replicated behind a load balancer. Each replica validates API keys independently.
 
 ### Federation for Multi-Cluster
 
@@ -413,6 +455,60 @@ flowchart LR
     PF --> GC
     PF --> AC
 ```
+
+---
+
+## SaaS Mode Architecture
+
+SaaS mode enables PANOPTES to monitor remote hosts that cannot be reached by Prometheus pull-based scraping (e.g., hosts behind NAT, customer-managed servers, or branch offices). Remote hosts run the Grafana Alloy agent, which pushes data to the central server.
+
+```mermaid
+flowchart LR
+    subgraph Central["Central PANOPTES Server"]
+        NG["nginx Gateway\n:8080\nAPI key auth"]
+        PR["Prometheus\n:9090"]
+        LK["Loki\n:3100"]
+        AM["Alertmanager\n:9093"]
+        GR["Grafana\n:3000"]
+    end
+
+    subgraph Remote1["Remote Host A"]
+        AL1["Grafana Alloy"]
+    end
+
+    subgraph Remote2["Remote Host B"]
+        AL2["Grafana Alloy"]
+    end
+
+    subgraph Remote3["Remote Host C"]
+        AL3["Grafana Alloy"]
+    end
+
+    AL1 -->|"metrics + logs\n(API key A)"| NG
+    AL2 -->|"metrics + logs\n(API key B)"| NG
+    AL3 -->|"metrics + logs\n(API key C)"| NG
+
+    NG -->|"remote-write"| PR
+    NG -->|"log-push"| LK
+
+    PR --> AM
+    PR --> GR
+    LK --> GR
+```
+
+### SaaS Mode Components
+
+- **nginx Gateway**: OpenResty-based reverse proxy that validates per-tenant API keys on every request. Invalid keys receive a 401 response. Valid requests are proxied to Prometheus (remote-write endpoint) or Loki (push API).
+- **Grafana Alloy**: Lightweight agent installed on each remote host. Collects node metrics (CPU, memory, disk, network) and system logs, then pushes them to the gateway at a configurable interval.
+- **API Key Management**: Keys are generated with `scripts/generate-api-key.sh`, which creates a `pnpt_<tenant>_<random>` token and adds it to the nginx configuration. Each key is scoped to a tenant label.
+
+### Enabling SaaS Mode
+
+```bash
+docker compose --profile logging --profile saas up -d
+```
+
+This starts the nginx gateway container in addition to the standard logging stack. Remote hosts can then be onboarded by running the agent installer script with the generated API key.
 
 ---
 
@@ -449,7 +545,6 @@ flowchart LR
 | `prometheus-data` | 10 Gi | Prometheus TSDB | Matches retention size limit |
 | `grafana-data` | 5 Gi | Grafana | Dashboards, plugins, SQLite DB |
 | `alertmanager-data` | 2 Gi | Alertmanager | Notification log and silences |
-| `zabbix-db-data` | 10 Gi | PostgreSQL | Zabbix history and trends |
 
 ---
 
@@ -471,7 +566,7 @@ The current deployment runs all components as single instances. This is appropri
 | Alertmanager | Cluster mode with gossip protocol | Run 2-3 instances with `--cluster.peer` flags. Automatic deduplication of notifications. |
 | Grafana | Multiple read replicas behind a load balancer | Share a common PostgreSQL or MySQL database for dashboard state. |
 | Loki | Microservices mode with replication | Deploy separate ingester, distributor, and querier components with `replication_factor: 3`. |
-| PostgreSQL | Streaming replication with automatic failover | Use Patroni or pg_auto_failover for automated failover. |
+| nginx Gateway | Multiple stateless replicas behind a load balancer | No shared state required; each replica validates API keys independently. |
 | Webhook Receiver | Multiple replicas with shared cooldown state | Move cooldown state to Redis or a shared database to support multiple instances. |
 
 ### Backup Strategy
@@ -479,5 +574,4 @@ The current deployment runs all components as single instances. This is appropri
 - **Prometheus**: TSDB snapshots via the Admin API (`/api/v1/admin/tsdb/snapshot`)
 - **Grafana**: Dashboard JSON exports (automated via `scripts/import-dashboards.sh`) and SQLite database backups
 - **Loki**: Filesystem-level backups of `/loki/chunks` and `/loki/tsdb-index`
-- **PostgreSQL**: `pg_dump` for Zabbix database, scheduled via cron
 - **Configuration**: All configuration is version-controlled in Git

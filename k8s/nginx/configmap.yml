@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-gateway-config
+  namespace: panoptes
+  labels:
+    app.kubernetes.io/name: nginx-gateway
+    app.kubernetes.io/part-of: panoptes
+data:
+  nginx.conf: |
+    worker_processes auto;
+
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        lua_shared_dict api_keys 1m;
+
+        init_by_lua_block {
+            local f = io.open("/etc/nginx/api-keys.yml", "r")
+            if not f then
+                ngx.log(ngx.ERR, "failed to open api-keys.yml")
+                return
+            end
+            local content = f:read("*a")
+            f:close()
+
+            local keys = ngx.shared.api_keys
+            local current_name = nil
+            for line in content:gmatch("[^\r\n]+") do
+                local name = line:match("^%s*-%s*name:%s*(.+)%s*$")
+                if name then
+                    current_name = name
+                end
+                local key = line:match("^%s*key:%s*(.+)%s*$")
+                if key and current_name then
+                    keys:set(key, current_name)
+                    current_name = nil
+                end
+            end
+        }
+
+        server {
+            listen 8080;
+
+            location /health {
+                access_log off;
+                return 200 "ok";
+            }
+
+            location /api/v1/write {
+                access_by_lua_block {
+                    local key = ngx.req.get_headers()["X-API-Key"]
+                    if not key then
+                        ngx.status = 401
+                        ngx.header["Content-Type"] = "application/json"
+                        ngx.say('{"error": "missing API key"}')
+                        return ngx.exit(401)
+                    end
+                    local tenant = ngx.shared.api_keys:get(key)
+                    if not tenant then
+                        ngx.status = 401
+                        ngx.header["Content-Type"] = "application/json"
+                        ngx.say('{"error": "invalid API key"}')
+                        return ngx.exit(401)
+                    end
+                    ngx.req.set_header("X-Tenant", tenant)
+                }
+                proxy_pass http://prometheus:9090;
+            }
+
+            location /loki/api/v1/push {
+                access_by_lua_block {
+                    local key = ngx.req.get_headers()["X-API-Key"]
+                    if not key then
+                        ngx.status = 401
+                        ngx.header["Content-Type"] = "application/json"
+                        ngx.say('{"error": "missing API key"}')
+                        return ngx.exit(401)
+                    end
+                    local tenant = ngx.shared.api_keys:get(key)
+                    if not tenant then
+                        ngx.status = 401
+                        ngx.header["Content-Type"] = "application/json"
+                        ngx.say('{"error": "invalid API key"}')
+                        return ngx.exit(401)
+                    end
+                    ngx.req.set_header("X-Tenant", tenant)
+                }
+                proxy_pass http://loki:3100;
+            }
+
+            location /prometheus/ {
+                proxy_pass http://prometheus:9090/;
+            }
+
+            location /alertmanager/ {
+                proxy_pass http://alertmanager:9093/;
+            }
+
+            location / {
+                proxy_pass http://grafana:3000;
+            }
+        }
+    }
+  api-keys.yml: |
+    tenants:
+      - name: cedar-lab
+        key: pnpt_cedar_a1b2c3d4e5f6
+      - name: demo
+        key: pnpt_demo_x9y8z7w6v5u4

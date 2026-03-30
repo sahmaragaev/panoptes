@@ -13,7 +13,6 @@ spec:
         - grafana.panoptes.example.com
         - prometheus.panoptes.example.com
         - alertmanager.panoptes.example.com
-        - zabbix.panoptes.example.com
       secretName: panoptes-tls
   rules:
     - host: grafana.panoptes.example.com
@@ -46,13 +45,3 @@ spec:
                 name: alertmanager
                 port:
                   number: 9093
-    - host: zabbix.panoptes.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: zabbix-web
-                port:
-                  number: 8080

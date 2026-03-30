@@ -65,7 +65,6 @@ If deploying with public-facing dashboards, configure DNS A records pointing to 
 | `grafana.panoptes.example.com` | A | `<VPS_IP>` | Grafana dashboards |
 | `prometheus.panoptes.example.com` | A | `<VPS_IP>` | Prometheus UI and API |
 | `alertmanager.panoptes.example.com` | A | `<VPS_IP>` | Alertmanager UI |
-| `zabbix.panoptes.example.com` | A | `<VPS_IP>` | Zabbix Web interface |
 
 Replace `panoptes.example.com` with your actual domain. Update the `DOMAIN` variable in `.env` accordingly.
 
@@ -187,23 +186,20 @@ docker compose up -d
 docker compose ps
 ```
 
-All 12 containers should show `Up` status:
+All core containers should show `Up` status (the exact count depends on the profile used):
 
 ```
 NAME               STATUS
 prometheus         Up
 node-exporter      Up
 alertmanager       Up
-loki               Up
-promtail           Up
 grafana            Up
 cadvisor           Up
-zabbix-postgres    Up
-zabbix-server      Up
-zabbix-web         Up
 custom-exporter    Up
 webhook-receiver   Up
 ```
+
+With the `logging` profile, you will also see `loki` and `promtail`. With the `full` profile, `snmp-exporter` is added. With the `saas` profile, `nginx-gateway` is added.
 
 ### Access URLs (Docker Compose)
 
@@ -212,9 +208,10 @@ webhook-receiver   Up
 | Grafana | http://localhost:3000 | admin / panoptes2026 |
 | Prometheus | http://localhost:9090 | N/A |
 | Alertmanager | http://localhost:9093 | N/A |
-| Zabbix Web | http://localhost:8081 | Admin / zabbix |
 | Loki | http://localhost:3100 | N/A |
 | cAdvisor | http://localhost:8080 | N/A |
+| snmp_exporter | http://localhost:9116 | N/A |
+| nginx Gateway | http://localhost:8080 | N/A (API key auth) |
 | Custom Exporter | http://localhost:9101 | N/A |
 | Webhook Receiver | http://localhost:5001/health | N/A |
 
@@ -300,7 +297,8 @@ kubectl apply -f k8s/grafana/ -n panoptes
 kubectl apply -f k8s/custom-exporter/ -n panoptes
 kubectl apply -f k8s/webhook-receiver/ -n panoptes
 kubectl apply -f k8s/cadvisor/ -n panoptes
-kubectl apply -f k8s/zabbix/ -n panoptes
+kubectl apply -f k8s/snmp-exporter/ -n panoptes
+kubectl apply -f k8s/nginx/ -n panoptes
 kubectl apply -f k8s/ingress/ -n panoptes
 ```
 
@@ -323,7 +321,6 @@ With Ingress configured:
 | Grafana | https://grafana.panoptes.example.com |
 | Prometheus | https://prometheus.panoptes.example.com |
 | Alertmanager | https://alertmanager.panoptes.example.com |
-| Zabbix Web | https://zabbix.panoptes.example.com |
 
 Without Ingress (NodePort):
 
@@ -365,17 +362,11 @@ The `.env` file controls all sensitive configuration values. Each variable is ex
 | `SMTP_USER` | `alerts@example.com` | SMTP authentication username (often the email address) |
 | `SMTP_PASSWORD` | `app_password` | SMTP authentication password. For Gmail, use an [App Password](https://myaccount.google.com/apppasswords). |
 
-### Zabbix
-
-| Variable | Default | Description |
-|---|---|---|
-| `ZABBIX_DB_PASSWORD` | `zabbix_secure_pwd` | Password for the Zabbix PostgreSQL database. **Change this in production.** |
-
 ### Domain
 
 | Variable | Default | Description |
 |---|---|---|
-| `DOMAIN` | `panoptes.example.com` | Base domain for Ingress routing. Subdomains (grafana, prometheus, alertmanager, zabbix) are configured in the Ingress manifest. |
+| `DOMAIN` | `panoptes.example.com` | Base domain for Ingress routing. Subdomains (grafana, prometheus, alertmanager) are configured in the Ingress manifest. |
 
 ---
 
@@ -452,18 +443,22 @@ curl -X POST http://localhost:9090/-/reload
 
 ### Adding a Windows Host
 
-1. Install the Zabbix Agent on the Windows host:
-   - Download from the [Zabbix downloads page](https://www.zabbix.com/download_agents)
-   - Install with the Zabbix Server address pointing to your PANOPTES server
-   - Configure `Server=<PANOPTES_IP>` and `ServerActive=<PANOPTES_IP>` in `zabbix_agentd.conf`
+1. Install the Windows Exporter on the target host:
+   - Download from the [windows_exporter releases page](https://github.com/prometheus-community/windows_exporter/releases)
+   - Install as a Windows service pointing to the default port 9182
+   - For Active Directory monitoring, enable the `ad` collector: `windows_exporter --collectors.enabled="cpu,cs,logical_disk,memory,net,os,service,ad"`
 
-2. In the Zabbix Web interface (http://localhost:8081):
-   - Navigate to Configuration > Hosts > Create Host
-   - Set the agent interface to the Windows host IP
-   - Link the "Windows by Zabbix agent" template
-   - For Active Directory monitoring, also link the "Active Directory" template
+2. Add the target to the `windows-exporter` scrape job in `configs/prometheus/prometheus.yml`:
 
-3. The host will appear in Grafana via the Zabbix data source plugin.
+```yaml
+  - job_name: 'windows-exporter'
+    static_configs:
+      - targets: ['192.168.1.20:9182']
+        labels:
+          hostname: 'ad-server-01'
+```
+
+3. Reload Prometheus and verify the target appears in http://localhost:9090/targets.
 
 ---
 
@@ -621,9 +616,6 @@ curl -f http://localhost:9100/metrics | head -5
 curl -f http://localhost:8080/healthz
 # Expected: ok
 
-# Zabbix Web
-curl -f http://localhost:8081
-# Expected: HTML response (Zabbix login page)
 ```
 
 ### Prometheus Targets
@@ -637,7 +629,6 @@ Open http://localhost:9090/targets and verify all scrape targets show **UP** sta
 - `loki` (loki:3100)
 - `cadvisor` (cadvisor:8080)
 - `custom-exporter` (custom-exporter:9101)
-- `zabbix-server` (zabbix-server:10051)
 
 ### Grafana Data Sources
 
@@ -667,6 +658,118 @@ make validate
 # yamllint configs/
 # docker compose config --quiet
 ```
+
+---
+
+## Deployment Profiles
+
+PANOPTES uses Docker Compose profiles to control which services are started. This lets you choose the right footprint for your environment.
+
+### Core (Default)
+
+Starts the essential monitoring stack without log aggregation or SNMP monitoring.
+
+```bash
+docker compose up -d
+```
+
+Services: Prometheus, Grafana, Alertmanager, Node Exporter, cAdvisor, Custom Exporter, Webhook Receiver.
+
+### With Logging
+
+Adds Loki and Promtail for centralized log aggregation.
+
+```bash
+docker compose --profile logging up -d
+```
+
+### Full
+
+Adds snmp_exporter for SNMP network device monitoring on top of the logging stack.
+
+```bash
+docker compose --profile full up -d
+```
+
+### SaaS Mode
+
+Adds the nginx gateway so that remote Grafana Alloy agents can push metrics and logs into the platform.
+
+```bash
+docker compose --profile logging --profile saas up -d
+```
+
+---
+
+## SaaS Mode Setup
+
+SaaS mode allows remote hosts to push metrics and logs to a central PANOPTES server.
+
+### Step 1: Start with SaaS Profile
+
+```bash
+docker compose --profile logging --profile saas up -d
+```
+
+This starts the nginx gateway on port 8080 alongside the standard logging stack.
+
+### Step 2: Generate API Keys
+
+```bash
+bash scripts/generate-api-key.sh --tenant myhost
+```
+
+This generates a key in the format `pnpt_myhost_xxxxxxxxxxxx` and adds it to the nginx gateway configuration. Restart the gateway to pick up the new key:
+
+```bash
+docker compose restart nginx-gateway
+```
+
+### Step 3: Share the Key with the Tenant
+
+Provide the tenant with:
+- The server address: `https://panoptes.example.com:8080`
+- The API key: `pnpt_myhost_xxxxxxxxxxxx`
+- The tenant name: `myhost`
+
+---
+
+## Connecting Remote Hosts
+
+Install the Grafana Alloy agent on any remote Linux host to push metrics and logs to PANOPTES.
+
+### Automated Install
+
+```bash
+curl -sSL https://raw.githubusercontent.com/ada-university/panoptes/main/agent/install.sh | bash -s -- \
+  --server https://panoptes.example.com:8080 \
+  --key pnpt_myhost_xxxxxxxxxxxx \
+  --tenant myhost
+```
+
+The script performs the following:
+
+1. Downloads and installs the Grafana Alloy binary
+2. Configures it to collect node metrics (CPU, memory, disk, network) and system logs
+3. Sets the remote-write endpoint to the PANOPTES nginx gateway
+4. Configures the API key in the `Authorization` header
+5. Starts the agent as a systemd service
+
+### Verifying the Connection
+
+After installation, verify the remote host appears in Prometheus:
+
+```bash
+curl -s http://localhost:9090/api/v1/targets | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for t in data['data']['activeTargets']:
+    if 'remote' in t.get('labels', {}).get('job', ''):
+        print(f\"{t['labels']['instance']} - {t['health']}\")
+"
+```
+
+The remote host's metrics will also appear in Grafana dashboards with the tenant label for filtering.
 
 ---
 
