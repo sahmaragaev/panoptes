@@ -1,5 +1,6 @@
 import logging
 import socket
+import ssl
 import time
 
 from ldap3 import Connection, Server, Tls
@@ -33,7 +34,7 @@ class AdHealthCollector:
         host = dc["host"]
         port = dc.get("port", 636)
         try:
-            tls = Tls(validate=0)
+            tls = Tls(validate=ssl.CERT_OPTIONAL)
             server = Server(host, port=port, use_ssl=True, tls=tls)
             start = time.time()
             conn = Connection(server, auto_bind=True)

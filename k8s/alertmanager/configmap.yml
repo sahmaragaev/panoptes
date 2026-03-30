@@ -35,12 +35,12 @@ data:
       - name: telegram-warnings
         telegram_configs:
           - bot_token: '${TELEGRAM_BOT_TOKEN}'
-            chat_id: ${TELEGRAM_CHAT_ID}
+            chat_id: '${TELEGRAM_CHAT_ID}'
             send_resolved: true
       - name: telegram-critical
         telegram_configs:
           - bot_token: '${TELEGRAM_BOT_TOKEN}'
-            chat_id: ${TELEGRAM_CHAT_ID}
+            chat_id: '${TELEGRAM_CHAT_ID}'
             send_resolved: true
       - name: webhook-remediation
         webhook_configs:

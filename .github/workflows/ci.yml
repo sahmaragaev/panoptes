@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check exporters/ remediation/webhook-receiver/ tests/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pytest pytest-asyncio httpx pyyaml prometheus_client requests fastapi uvicorn ldap3
+      - run: pytest tests/ -m "not integration" -v
+
+  validate-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install yamllint
+      - run: yamllint -d relaxed configs/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          PROM_VERSION="3.2.1"
+          wget -q https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+          tar xzf prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+          ./prometheus-${PROM_VERSION}.linux-amd64/promtool check config configs/prometheus/prometheus.yml
+          ./prometheus-${PROM_VERSION}.linux-amd64/promtool check rules configs/prometheus/alert_rules.yml
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t panoptes/custom-exporter:test exporters/custom-exporter/
+      - run: docker build -t panoptes/webhook-receiver:test remediation/webhook-receiver/
+
+  compose-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose config --quiet

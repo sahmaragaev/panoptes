@@ -103,7 +103,7 @@ groups:
           runbook_url: "docs/runbook.md#too-many-open-files"
 
       - alert: NetworkReceiveErrors
-        expr: rate(node_network_receive_errs_total[5m]) > 0
+        expr: rate(node_network_receive_errs_total[5m]) > 10
         for: 5m
         labels:
           severity: warning
@@ -166,7 +166,7 @@ groups:
           runbook_url: "docs/runbook.md#container-high-cpu"
 
       - alert: ContainerHighMemory
-        expr: sum by(name) (container_memory_usage_bytes{name!=""}) / sum by(name) (container_spec_memory_limit_bytes{name!=""} > 0) * 100 > 85
+        expr: (sum by(name) (container_memory_usage_bytes{name!=""}) / sum by(name) (container_spec_memory_limit_bytes{name!=""} > 0) * 100 > 85) and sum by(name) (container_spec_memory_limit_bytes{name!=""}) > 0
         for: 5m
         labels:
           severity: warning

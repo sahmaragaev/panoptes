@@ -9,7 +9,7 @@ logger = logging.getLogger("panoptes-exporter.http_health")
 ENDPOINT_UP = Gauge(
     "panoptes_endpoint_up",
     "Whether the endpoint is reachable",
-    ["name", "url"],
+    ["name"],
 )
 ENDPOINT_RESPONSE_SECONDS = Histogram(
     "panoptes_endpoint_response_seconds",
@@ -20,7 +20,7 @@ ENDPOINT_RESPONSE_SECONDS = Histogram(
 ENDPOINT_STATUS_CODE = Gauge(
     "panoptes_endpoint_status_code",
     "HTTP status code of the endpoint",
-    ["name", "url"],
+    ["name"],
 )
 
 
@@ -34,8 +34,8 @@ class HttpHealthCollector:
         url = endpoint["url"]
         try:
             response = requests.get(url, timeout=self._timeout)
-            ENDPOINT_UP.labels(name=name, url=url).set(1)
-            ENDPOINT_STATUS_CODE.labels(name=name, url=url).set(
+            ENDPOINT_UP.labels(name=name).set(1)
+            ENDPOINT_STATUS_CODE.labels(name=name).set(
                 response.status_code
             )
             ENDPOINT_RESPONSE_SECONDS.labels(name=name).observe(
@@ -43,8 +43,8 @@ class HttpHealthCollector:
             )
         except requests.exceptions.RequestException:
             logger.warning("Endpoint %s (%s) is unreachable", name, url)
-            ENDPOINT_UP.labels(name=name, url=url).set(0)
-            ENDPOINT_STATUS_CODE.labels(name=name, url=url).set(0)
+            ENDPOINT_UP.labels(name=name).set(0)
+            ENDPOINT_STATUS_CODE.labels(name=name).set(0)
 
     def collect(self):
         with ThreadPoolExecutor(max_workers=len(self._endpoints)) as executor:

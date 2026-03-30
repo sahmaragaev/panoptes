@@ -1,7 +1,9 @@
 import logging
-import subprocess
 import os
-from datetime import datetime, timedelta
+import re
+import subprocess
+import threading
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import yaml
@@ -41,23 +43,35 @@ cooldowns: dict[str, datetime] = {}
 history: list[dict[str, Any]] = []
 MAX_HISTORY = 50
 
+_cooldowns_lock = threading.Lock()
+_history_lock = threading.Lock()
+
+
+def validate_input(value: str) -> str:
+    if not re.match(r"^[a-zA-Z0-9_.:-]+$", value):
+        raise ValueError(f"Invalid input: {value}")
+    return value
+
 
 def is_in_cooldown(host: str, remediation: str) -> bool:
     key = f"{host}:{remediation}"
-    if key in cooldowns:
-        if datetime.utcnow() - cooldowns[key] < COOLDOWN_DURATION:
-            return True
-        del cooldowns[key]
+    with _cooldowns_lock:
+        if key in cooldowns:
+            if datetime.now(timezone.utc) - cooldowns[key] < COOLDOWN_DURATION:
+                return True
+            del cooldowns[key]
     return False
 
 
 def set_cooldown(host: str, remediation: str) -> None:
     key = f"{host}:{remediation}"
-    cooldowns[key] = datetime.utcnow()
+    with _cooldowns_lock:
+        cooldowns[key] = datetime.now(timezone.utc)
 
 
 def run_playbook(playbook: str, target_host: str, extra_vars: dict | None = None) -> dict:
     playbook_path = os.path.join(PLAYBOOK_DIR, os.path.basename(playbook))
+    validate_input(target_host)
     cmd = [
         "ansible-playbook",
         playbook_path,
@@ -66,6 +80,7 @@ def run_playbook(playbook: str, target_host: str, extra_vars: dict | None = None
     ]
     if extra_vars:
         for k, v in extra_vars.items():
+            validate_input(v)
             cmd.extend(["--extra-vars", f"{k}={v}"])
 
     logger.info("Running: %s", " ".join(cmd))
@@ -92,9 +107,10 @@ def run_playbook(playbook: str, target_host: str, extra_vars: dict | None = None
 
 
 def add_history(entry: dict) -> None:
-    history.insert(0, entry)
-    while len(history) > MAX_HISTORY:
-        history.pop()
+    with _history_lock:
+        history.insert(0, entry)
+        while len(history) > MAX_HISTORY:
+            history.pop()
 
 
 @app.post("/webhook")
@@ -149,7 +165,7 @@ async def webhook(request: Request):
         set_cooldown(target_host, remediation)
 
         entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "alert": alert_name,
             "remediation": remediation,
             "target_host": target_host,
@@ -175,27 +191,29 @@ async def health():
 
 @app.get("/history")
 async def get_history():
-    return {"history": history}
+    with _history_lock:
+        return {"history": list(history)}
 
 
 @app.get("/cooldowns")
 async def get_cooldowns():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     active = {}
     expired_keys = []
 
-    for key, timestamp in cooldowns.items():
-        elapsed = now - timestamp
-        if elapsed < COOLDOWN_DURATION:
-            remaining = COOLDOWN_DURATION - elapsed
-            active[key] = {
-                "started": timestamp.isoformat(),
-                "remaining_seconds": int(remaining.total_seconds()),
-            }
-        else:
-            expired_keys.append(key)
+    with _cooldowns_lock:
+        for key, timestamp in cooldowns.items():
+            elapsed = now - timestamp
+            if elapsed < COOLDOWN_DURATION:
+                remaining = COOLDOWN_DURATION - elapsed
+                active[key] = {
+                    "started": timestamp.isoformat(),
+                    "remaining_seconds": int(remaining.total_seconds()),
+                }
+            else:
+                expired_keys.append(key)
 
-    for key in expired_keys:
-        del cooldowns[key]
+        for key in expired_keys:
+            del cooldowns[key]
 
     return {"cooldowns": active}

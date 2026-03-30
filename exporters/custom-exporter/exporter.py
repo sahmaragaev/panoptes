@@ -1,18 +1,17 @@
+import logging
+import os
 import signal
 import sys
 import time
-import logging
-import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import yaml
-from prometheus_client import start_http_server
-from prometheus_client.core import REGISTRY
-
-from collectors.http_health import HttpHealthCollector
-from collectors.system_metrics import SystemMetricsCollector
 from collectors.ad_health import AdHealthCollector
 from collectors.certificate_expiry import CertificateExpiryCollector
+from collectors.http_health import HttpHealthCollector
+from collectors.system_metrics import SystemMetricsCollector
+from prometheus_client import start_http_server
+from prometheus_client.core import REGISTRY
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,7 +33,7 @@ class PanoptesCollector:
             futures = {
                 executor.submit(c.collect): c for c in self._collectors
             }
-            for future in futures:
+            for future in as_completed(futures):
                 try:
                     future.result(timeout=self._collection_interval)
                 except Exception:

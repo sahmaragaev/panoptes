@@ -15,6 +15,12 @@ services:
     ports:
       - "9090:9090"
     mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
     networks:
       - monitoring
@@ -35,6 +41,11 @@ services:
       - "9100:9100"
     mem_limit: 128m
     pid: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9100/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - monitoring
@@ -47,6 +58,11 @@ services:
     ports:
       - "9093:9093"
     mem_limit: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9093/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - monitoring
@@ -61,6 +77,12 @@ services:
     ports:
       - "3100:3100"
     mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     restart: unless-stopped
     networks:
       - monitoring
@@ -73,8 +95,14 @@ services:
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_positions:/var/lib/promtail
     command: -config.file=/etc/promtail/promtail-config.yaml
     mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9080/ready || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     depends_on:
       - loki
     restart: unless-stopped
@@ -84,6 +112,7 @@ services:
   grafana:
     image: grafana/grafana:11.5.2
     container_name: grafana
+    env_file: .env
     volumes:
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -96,6 +125,12 @@ services:
       - GF_INSTALL_PLUGINS=alexanderzobnin-zabbix-app,grafana-clock-panel,grafana-piechart-panel
       - GF_USERS_ALLOW_SIGN_UP=false
     mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     depends_on:
       - prometheus
       - loki
@@ -115,6 +150,11 @@ services:
       - "8080:8080"
     mem_limit: 128m
     privileged: true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - monitoring
@@ -122,6 +162,7 @@ services:
   zabbix-postgres:
     image: postgres:16
     container_name: zabbix-postgres
+    env_file: .env
     volumes:
       - zabbix_db:/var/lib/postgresql/data
     environment:
@@ -129,6 +170,12 @@ services:
       - POSTGRES_USER=zabbix
       - POSTGRES_PASSWORD=${ZABBIX_DB_PASSWORD}
     mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbix || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     networks:
       - monitoring
@@ -136,6 +183,7 @@ services:
   zabbix-server:
     image: zabbix/zabbix-server-pgsql:alpine-7.4-latest
     container_name: zabbix-server
+    env_file: .env
     ports:
       - "10051:10051"
     environment:
@@ -146,6 +194,12 @@ services:
     depends_on:
       - zabbix-postgres
     mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 10051 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       - monitoring
@@ -153,6 +207,7 @@ services:
   zabbix-web:
     image: zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest
     container_name: zabbix-web
+    env_file: .env
     ports:
       - "8081:8080"
     environment:
@@ -165,6 +220,12 @@ services:
     depends_on:
       - zabbix-server
     mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
     networks:
       - monitoring
@@ -179,6 +240,11 @@ services:
     depends_on:
       - prometheus
     mem_limit: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9101/metrics || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - monitoring
@@ -193,6 +259,11 @@ services:
     depends_on:
       - alertmanager
     mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:5001/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - monitoring
@@ -202,6 +273,7 @@ volumes:
   loki_data:
   grafana_data:
   zabbix_db:
+  promtail_positions:
 
 networks:
   monitoring:
