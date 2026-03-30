@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 KEYS_FILE = os.environ.get("KEYS_FILE", "/etc/nginx/api-keys.yml")
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
+RELOAD_INTERVAL = 10
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +24,26 @@ app = FastAPI(title="Panoptes Tenant Notifier")
 _tenants: dict[str, list[str]] = {}
 _default_chat_ids: list[str] = []
 _tenants_lock = threading.Lock()
+_last_mtime: float = 0.0
+
+
+def _check_reload() -> None:
+    global _last_mtime
+    try:
+        mtime = os.path.getmtime(KEYS_FILE)
+        if mtime != _last_mtime:
+            _last_mtime = mtime
+            load_tenants()
+    except FileNotFoundError:
+        pass
+    except Exception:
+        logger.exception("Error checking keys file")
+
+
+def _watcher() -> None:
+    while True:
+        threading.Event().wait(RELOAD_INTERVAL)
+        _check_reload()
 
 
 def load_tenants() -> None:
@@ -98,6 +119,8 @@ def send_telegram(chat_id: str, message: str) -> bool:
 @app.on_event("startup")
 async def startup():
     load_tenants()
+    watcher = threading.Thread(target=_watcher, daemon=True)
+    watcher.start()
 
 
 @app.post("/reload")

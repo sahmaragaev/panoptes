@@ -50,5 +50,4 @@ else
     echo "  Telegram chats: none (configure later in api-keys.yml)"
 fi
 echo ""
-echo "Reload services to apply:"
-echo "  docker compose restart nginx-gateway tenant-notifier"
+echo "Both nginx-gateway and tenant-notifier will pick up the new tenant within 10 seconds."
