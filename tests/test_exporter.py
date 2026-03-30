@@ -1,6 +1,6 @@
-import sys
 import os
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -13,11 +13,11 @@ sys.path.insert(
     ),
 )
 
+from collectors.ad_health import AdHealthCollector
+from collectors.certificate_expiry import CertificateExpiryCollector
 from collectors.http_health import HttpHealthCollector
 from collectors.system_metrics import SystemMetricsCollector
-from collectors.certificate_expiry import CertificateExpiryCollector
-from collectors.ad_health import AdHealthCollector
-from exporter import load_config, build_collectors
+from exporter import build_collectors, load_config
 
 
 @pytest.fixture()

@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install ruff
-      - run: ruff check exporters/ remediation/webhook-receiver/ tests/
+      - run: ruff check exporters/ remediation/ tests/
 
   test:
     runs-on: ubuntu-latest
@@ -41,6 +41,8 @@ jobs:
           PROM_VERSION="3.2.1"
           wget -q https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz
           tar xzf prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+          sudo mkdir -p /etc/prometheus
+          sudo cp configs/prometheus/alert_rules.yml /etc/prometheus/alert_rules.yml
           ./prometheus-${PROM_VERSION}.linux-amd64/promtool check config configs/prometheus/prometheus.yml
           ./prometheus-${PROM_VERSION}.linux-amd64/promtool check rules configs/prometheus/alert_rules.yml
 
@@ -51,10 +53,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build -t panoptes/custom-exporter:test exporters/custom-exporter/
       - run: docker build -t panoptes/webhook-receiver:test remediation/webhook-receiver/
+      - run: docker build -t panoptes/tenant-notifier:test remediation/tenant-notifier/
 
   compose-validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: cp .env.example .env
-      - run: docker compose config --quiet
+      - run: docker compose --profile full --profile saas config --quiet
