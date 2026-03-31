@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: pip install yamllint
-      - run: yamllint -d '{extends: relaxed, rules: {line-length: disable}}' configs/
+      - run: 'yamllint -d "{extends: relaxed, rules: {line-length: disable}}" configs/'
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
