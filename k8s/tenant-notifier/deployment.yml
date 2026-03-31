@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-notifier
+  namespace: panoptes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tenant-notifier
+  template:
+    metadata:
+      labels:
+        app: tenant-notifier
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: tenant-notifier
+          image: panoptes/tenant-notifier:latest
+          ports:
+            - containerPort: 5002
+          env:
+            - name: KEYS_FILE
+              value: /etc/nginx/api-keys.yml
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: panoptes-secrets
+                  key: telegram-bot-token
+          resources:
+            requests:
+              cpu: 25m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: api-keys
+              mountPath: /etc/nginx/api-keys.yml
+              subPath: api-keys.yml
+              readOnly: true
+      volumes:
+        - name: api-keys
+          configMap:
+            name: nginx-gateway-config

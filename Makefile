@@ -47,6 +47,7 @@ validate-alerts:
 build-exporters:
 	docker build -t panoptes-custom-exporter ./exporters/custom-exporter
 	docker build -t panoptes-webhook-receiver ./remediation/webhook-receiver
+	docker build -t panoptes-tenant-notifier ./remediation/tenant-notifier
 
 validate:
 	promtool check config configs/prometheus/prometheus.yml

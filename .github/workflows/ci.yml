@@ -55,6 +55,15 @@ jobs:
       - run: docker build -t panoptes/webhook-receiver:test remediation/webhook-receiver/
       - run: docker build -t panoptes/tenant-notifier:test remediation/tenant-notifier/
 
+  go-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - run: cd remediation/tenant-notifier && go test ./...
+
   compose-validate:
     runs-on: ubuntu-latest
     steps:
