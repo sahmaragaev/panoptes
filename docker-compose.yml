@@ -13,8 +13,6 @@ services:
       - --web.enable-admin-api
       - --web.enable-remote-write-receiver
       - --config.file=/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
     mem_limit: 384m
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
@@ -56,8 +54,6 @@ services:
     container_name: alertmanager
     volumes:
       - ./configs/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-    ports:
-      - "9094:9093"
     mem_limit: 96m
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9093/-/healthy || exit 1"]
@@ -75,8 +71,6 @@ services:
       - ./configs/loki/loki-config.yaml:/etc/loki/loki-config.yaml
       - loki_data:/loki
     command: -config.file=/etc/loki/loki-config.yaml
-    ports:
-      - "3100:3100"
     mem_limit: 384m
     profiles:
       - logging
