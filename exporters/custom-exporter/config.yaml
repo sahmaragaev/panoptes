@@ -29,9 +29,5 @@ ad_health:
   domain: cedar.local
 
 certificate_expiry:
-  enabled: true
-  hosts:
-    - host: grafana.panoptes.example.com
-      port: 443
-    - host: prometheus.panoptes.example.com
-      port: 443
+  enabled: false
+  hosts: []
