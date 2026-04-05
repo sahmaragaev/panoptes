@@ -128,7 +128,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "count(up)",
+          "expr": "count(count by (instance) (up{job=\"node-exporter\"}))",
           "legendFormat": "",
           "instant": true
         }
