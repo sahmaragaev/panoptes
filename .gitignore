@@ -8,3 +8,5 @@ node_modules/
 CLAUDE.md
 DEPLOY.md
 configs/nginx/api-keys.yml
+exporters/custom-exporter/config.yaml
+docker-compose.override.yml
