@@ -32,8 +32,7 @@ echo "Alloy ${ALLOY_VERSION} installed to /usr/local/bin/alloy."
 
 echo "Installing Alloy configuration..."
 mkdir -p /etc/alloy
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp "${SCRIPT_DIR}/config.alloy" /etc/alloy/config.alloy
+curl -sSL https://raw.githubusercontent.com/sahmaragaev/panoptes/main/agent/config.alloy -o /etc/alloy/config.alloy
 
 echo "Creating environment file..."
 cat > /etc/alloy/env <<ENVFILE
