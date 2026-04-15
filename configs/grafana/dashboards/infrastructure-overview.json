@@ -128,7 +128,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "count(count by (instance) (up{job=\"node-exporter\"}))",
+          "expr": "count(count by (hostname) (up{job=~\"node-exporter|prometheus.scrape.node\"}))",
           "legendFormat": "",
           "instant": true
         }
@@ -297,7 +297,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\",job=~\"node-exporter|prometheus.scrape.node\"}[5m])) * 100)",
           "legendFormat": "",
           "instant": true
         }
@@ -341,7 +341,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(1 - (avg(node_memory_MemAvailable_bytes) / avg(node_memory_MemTotal_bytes))) * 100",
+          "expr": "(1 - (avg(node_memory_MemAvailable_bytes{job=~\"node-exporter|prometheus.scrape.node\"}) / avg(node_memory_MemTotal_bytes{job=~\"node-exporter|prometheus.scrape.node\"}))) * 100",
           "legendFormat": "",
           "instant": true
         }
@@ -385,7 +385,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(1 - (avg(node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}) / avg(node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"}))) * 100",
+          "expr": "(1 - (avg(node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"tmpfs\",job=~\"node-exporter|prometheus.scrape.node\"}) / avg(node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\",job=~\"node-exporter|prometheus.scrape.node\"}))) * 100",
           "legendFormat": "",
           "instant": true
         }

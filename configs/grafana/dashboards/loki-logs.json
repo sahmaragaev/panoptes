@@ -42,6 +42,44 @@
         "sort": 1
       },
       {
+        "name": "hostname",
+        "type": "query",
+        "label": "Hostname",
+        "datasource": {
+          "type": "loki",
+          "uid": null
+        },
+        "query": "label_values({job=~\".+\"}, hostname)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "tenant",
+        "type": "query",
+        "label": "Tenant",
+        "datasource": {
+          "type": "loki",
+          "uid": null
+        },
+        "query": "label_values({job=~\".+\"}, tenant)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
         "name": "search",
         "type": "textbox",
         "label": "Search",
@@ -93,7 +131,7 @@
             "type": "loki",
             "uid": null
           },
-          "expr": "sum by(job) (count_over_time({job=~\".+\"}[$__interval]))",
+          "expr": "sum by(job) (count_over_time({job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"}[$__interval]))",
           "legendFormat": "{{job}}"
         }
       ],
@@ -160,7 +198,7 @@
             "type": "loki",
             "uid": null
           },
-          "expr": "{job=~\"$job\"} |~ \"$search\" |~ \"$level\"",
+          "expr": "{job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |~ \"$search\" |~ \"$level\"",
           "maxLines": 500
         }
       ],
@@ -197,7 +235,7 @@
             "type": "loki",
             "uid": null
           },
-          "expr": "topk(10, sum by(job, level) (count_over_time({job=~\"$job\"} |= \"error\" [$__interval])))",
+          "expr": "topk(10, sum by(job, level) (count_over_time({job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |= \"error\" [$__interval])))",
           "legendFormat": "{{job}} - {{level}}",
           "instant": true
         }
