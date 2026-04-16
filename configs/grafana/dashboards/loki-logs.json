@@ -33,6 +33,7 @@
         "query": "label_values({job=~\".+\"}, job)",
         "refresh": 2,
         "includeAll": true,
+        "allValue": ".*",
         "multi": true,
         "current": {
           "selected": true,
@@ -52,6 +53,7 @@
         "query": "label_values({job=~\".+\"}, hostname)",
         "refresh": 2,
         "includeAll": true,
+        "allValue": ".*",
         "multi": true,
         "current": {
           "selected": true,
@@ -71,6 +73,7 @@
         "query": "label_values({job=~\".+\"}, tenant)",
         "refresh": 2,
         "includeAll": true,
+        "allValue": ".*",
         "multi": true,
         "current": {
           "selected": true,
@@ -100,6 +103,7 @@
           "value": "$__all"
         },
         "includeAll": true,
+        "allValue": ".*",
         "multi": true,
         "options": [
           { "selected": false, "text": "info", "value": "info" },
@@ -198,7 +202,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |~ \"$search\" |~ \"$level\"",
+          "expr": "{job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |~ \"$search\"",
           "maxLines": 500
         }
       ],
