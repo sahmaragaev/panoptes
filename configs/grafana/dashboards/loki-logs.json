@@ -28,7 +28,7 @@
         "label": "Job",
         "datasource": {
           "type": "loki",
-          "uid": null
+          "uid": "loki"
         },
         "query": "label_values({job=~\".+\"}, job)",
         "refresh": 2,
@@ -47,7 +47,7 @@
         "label": "Hostname",
         "datasource": {
           "type": "loki",
-          "uid": null
+          "uid": "loki"
         },
         "query": "label_values({job=~\".+\"}, hostname)",
         "refresh": 2,
@@ -66,7 +66,7 @@
         "label": "Tenant",
         "datasource": {
           "type": "loki",
-          "uid": null
+          "uid": "loki"
         },
         "query": "label_values({job=~\".+\"}, tenant)",
         "refresh": 2,
@@ -122,14 +122,14 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
       "datasource": {
         "type": "loki",
-        "uid": null
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "loki",
-            "uid": null
+            "uid": "loki"
           },
           "expr": "sum by(job) (count_over_time({job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"}[$__interval]))",
           "legendFormat": "{{job}}"
@@ -189,14 +189,14 @@
       "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
       "datasource": {
         "type": "loki",
-        "uid": null
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "loki",
-            "uid": null
+            "uid": "loki"
           },
           "expr": "{job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |~ \"$search\" |~ \"$level\"",
           "maxLines": 500
@@ -226,14 +226,14 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
       "datasource": {
         "type": "loki",
-        "uid": null
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "loki",
-            "uid": null
+            "uid": "loki"
           },
           "expr": "topk(10, sum by(job, level) (count_over_time({job=~\"$job\",hostname=~\"$hostname\",tenant=~\"$tenant\"} |= \"error\" [$__interval])))",
           "legendFormat": "{{job}} - {{level}}",
@@ -286,14 +286,14 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
       "datasource": {
         "type": "loki",
-        "uid": null
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "loki",
-            "uid": null
+            "uid": "loki"
           },
           "expr": "count_over_time({job=\"auth\"} |= \"Failed password\" | pattern `<_> Failed password for <user> from <ip>` [5m])",
           "legendFormat": "Failed SSH Logins"
@@ -357,14 +357,14 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
       "datasource": {
         "type": "loki",
-        "uid": null
+        "uid": "loki"
       },
       "targets": [
         {
           "refId": "A",
           "datasource": {
             "type": "loki",
-            "uid": null
+            "uid": "loki"
           },
           "expr": "sum by (container) (count_over_time({job=\"docker\"} |= \"error\" [5m]))",
           "legendFormat": "{{container}}"
