@@ -18,13 +18,12 @@ prometheus.remote_write "central" {
 }
 
 local.file_match "logs" {
-  path_targets = [{"__path__" = "/var/log/*.log"}]
+  path_targets = [{"__path__" = "/var/log/*.log", "job" = "varlogs"}]
 }
 
 loki.source.file "logs" {
   targets    = local.file_match.logs.targets
   forward_to = [loki.write.central.receiver]
-  labels     = { job = "varlogs" }
 }
 
 loki.write "central" {
