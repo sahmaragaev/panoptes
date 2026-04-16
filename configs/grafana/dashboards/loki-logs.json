@@ -52,14 +52,9 @@
         },
         "query": "label_values({job=~\".+\"}, hostname)",
         "refresh": 2,
-        "includeAll": true,
-        "allValue": ".*",
-        "multi": true,
-        "current": {
-          "selected": true,
-          "text": "All",
-          "value": "$__all"
-        },
+        "includeAll": false,
+        "multi": false,
+        "current": {},
         "sort": 1
       },
       {
