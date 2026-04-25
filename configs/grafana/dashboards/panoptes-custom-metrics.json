@@ -346,9 +346,9 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "panoptes_cert_expiry_days{name=~\"$endpoint\"}",
+          "expr": "panoptes_cert_expiry_days",
           "instant": true,
-          "legendFormat": "{{name}}"
+          "legendFormat": "{{host}}"
         }
       ],
       "fieldConfig": {
@@ -398,9 +398,9 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "panoptes_cert_valid{name=~\"$endpoint\"}",
+          "expr": "panoptes_cert_valid",
           "instant": true,
-          "legendFormat": "{{name}}"
+          "legendFormat": "{{host}}"
         }
       ],
       "fieldConfig": {
