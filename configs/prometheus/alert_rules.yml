@@ -23,7 +23,7 @@ groups:
 
       - alert: CriticalCPUUsage
         expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
-        for: 2m
+        for: 10s
         labels:
           severity: critical
         annotations:
