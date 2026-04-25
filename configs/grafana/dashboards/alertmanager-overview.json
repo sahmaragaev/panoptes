@@ -207,8 +207,8 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "sum(rate(ALERTS{alertstate=\"firing\"}[$__rate_interval]))",
-          "legendFormat": "Firing Rate"
+          "expr": "sum(ALERTS{alertstate=\"firing\"})",
+          "legendFormat": "Firing"
         },
         {
           "refId": "B",
@@ -216,8 +216,8 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "sum(rate(ALERTS{alertstate=\"pending\"}[$__rate_interval]))",
-          "legendFormat": "Pending Rate"
+          "expr": "sum(ALERTS{alertstate=\"pending\"})",
+          "legendFormat": "Pending"
         }
       ],
       "fieldConfig": {
@@ -228,7 +228,7 @@
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
-            "axisLabel": "Alerts / sec",
+            "axisLabel": "Active Alerts",
             "drawStyle": "line",
             "fillOpacity": 15,
             "gradientMode": "scheme",
@@ -253,13 +253,13 @@
               { "color": "#F2495C", "value": 20 }
             ]
           },
-          "unit": "ops"
+          "unit": "short"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Firing Rate"
+              "options": "Firing"
             },
             "properties": [
               {
@@ -274,7 +274,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Pending Rate"
+              "options": "Pending"
             },
             "properties": [
               {
