@@ -317,8 +317,8 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "rate(alertmanager_notifications_total[$__rate_interval])",
-          "legendFormat": "Total - {{integration}}"
+          "expr": "rate(alertmanager_notifications_total{integration=\"webhook\"}[$__rate_interval])",
+          "legendFormat": "Total"
         },
         {
           "refId": "B",
@@ -326,8 +326,8 @@
             "type": "prometheus",
             "uid": null
           },
-          "expr": "rate(alertmanager_notifications_failed_total[$__rate_interval])",
-          "legendFormat": "Failed - {{integration}}"
+          "expr": "rate(alertmanager_notifications_failed_total{integration=\"webhook\"}[$__rate_interval])",
+          "legendFormat": "Failed"
         }
       ],
       "fieldConfig": {
